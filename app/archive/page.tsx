@@ -91,7 +91,7 @@ export default async function ArchivePage({ searchParams }: { searchParams: Prom
           {q ? (
             <>
               <p className="mb-2">No pages match &ldquo;{q}&rdquo;</p>
-              <a href="/archive" className="text-palantir-400 text-sm hover:underline">Clear search</a>
+              <Link href="/archive" className="text-palantir-400 text-sm hover:underline">Clear search</Link>
             </>
           ) : (
             <>
