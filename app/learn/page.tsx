@@ -364,7 +364,7 @@ export default function LearnPage() {
             className="text-amber-400 hover:text-amber-300 underline underline-offset-2">
             learn.palantir.com
           </a>
-          {' '}— Palantir's official learning platform. Free to access with a Palantir or AIP account.
+          {' '}— Palantir&apos;s official learning platform. Free to access with a Palantir or AIP account.
           Content is written here in plain English so anyone can decide where to start — then links you directly to the original course.
         </p>
 
@@ -387,7 +387,7 @@ export default function LearnPage() {
         <span className="text-amber-400 text-lg shrink-0">ℹ</span>
         <p className="text-night-400 text-sm leading-relaxed">
           <strong className="text-night-200">How this page works:</strong> Each course below links directly to the official Palantir lesson on learn.palantir.com.
-          The descriptions here are written in plain language to help you quickly understand what each course covers and whether it's right for your role —
+          The descriptions here are written in plain language to help you quickly understand what each course covers and whether it&apos;s right for your role —
           even if you have no technical background. Some courses require a free Palantir Community or AIP account.
         </p>
       </div>
@@ -452,9 +452,9 @@ export default function LearnPage() {
                           <span className="text-night-200 text-sm">{course.plainEnglish}</span>
                         </div>
 
-                        {/* What you'll learn */}
+                        {/* What you&apos;ll learn */}
                         <div>
-                          <h4 className="text-night-400 text-xs font-mono uppercase tracking-wider mb-2">What you'll learn</h4>
+                          <h4 className="text-night-400 text-xs font-mono uppercase tracking-wider mb-2">What you&apos;ll learn</h4>
                           <ul className="space-y-1.5">
                             {course.whatYouLearn.map((item, j) => (
                               <li key={j} className="flex items-start gap-2 text-sm text-night-300">
