@@ -22,6 +22,10 @@ export const metadata: Metadata = {
     'Self-evolving knowledge platform for mastering Palantir Foundry, Ontology, AIP, and Apollo. Daily news, AI-generated summaries, flashcards, and expert documentation.',
   keywords:  ['Palantir', 'Foundry', 'Ontology', 'AIP', 'Apollo', 'OSDK', 'AIP Logic'],
   authors:   [{ name: 'PalantirLearning' }],
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+  },
   openGraph: {
     title:       'PalantirLearning',
     description: 'Master the Palantir tech stack — Foundry, Ontology, AIP, Apollo',

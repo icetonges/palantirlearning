@@ -4,13 +4,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useSession, signIn, signOut } from 'next-auth/react'
 import { NAV_ITEMS } from '@/lib/navigation'
-import Image from 'next/image'
 
 export default function Navbar() {
   const pathname  = usePathname()
-  const { data: session } = useSession()
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const isActive = (href: string) =>
@@ -52,28 +49,8 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Auth + Mobile toggle */}
+          {/* Mobile toggle */}
           <div className="flex items-center gap-3">
-            {session ? (
-              <div className="hidden sm:flex items-center gap-2">
-                {session.user?.image && (
-                  <Image src={session.user.image} alt="avatar" width={28} height={28} className="rounded-full" />
-                )}
-                <button
-                  onClick={() => signOut()}
-                  className="text-xs text-night-300 hover:text-white transition-colors"
-                >
-                  Sign out
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => signIn('google')}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-palantir-700 hover:bg-palantir-600 text-white text-sm rounded-md transition-colors"
-              >
-                Sign in
-              </button>
-            )}
 
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
@@ -118,14 +95,7 @@ export default function Navbar() {
               </div>
             </Link>
           ))}
-          {!session && (
-            <button
-              onClick={() => signIn('google')}
-              className="w-full mt-2 px-4 py-2.5 bg-palantir-700 hover:bg-palantir-600 text-white text-sm rounded-md transition-colors"
-            >
-              Sign in with Google
-            </button>
-          )}
+
         </div>
       )}
     </nav>
