@@ -2,6 +2,8 @@
 import { prisma } from '@/lib/db'
 import { Metadata } from 'next'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Resources',
   description: 'Curated Palantir learning resources — official docs, SDKs, GitHub repos, YouTube, and community links.',

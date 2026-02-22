@@ -15,12 +15,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: page.title, description: page.excerpt || undefined }
 }
 
+export const dynamicParams = true
+
 export async function generateStaticParams() {
-  const pages = await prisma.knowledgePage.findMany({
-    where:  { category: 'FOUNDRY' },
-    select: { slug: true },
-  })
-  return pages.map((p) => ({ slug: p.slug }))
+  try {
+    const pages = await prisma.knowledgePage.findMany({
+      where:  { category: 'FOUNDRY' },
+      select: { slug: true },
+    })
+    return pages.map((p) => ({ slug: p.slug }))
+  } catch {
+    // DB not yet migrated (build time) — pages will be rendered on demand
+    return []
+  }
 }
 
 export default async function FoundrySubPage({ params }: Props) {

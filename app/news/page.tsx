@@ -7,6 +7,8 @@ import MarkdownRenderer from '@/components/MarkdownRenderer'
 import Link from 'next/link'
 import type { NewsTag } from '@prisma/client'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'News & Intel',
   description: 'Daily Palantir news, contract awards, AI executive briefings, and technical criticism.',

@@ -6,6 +6,8 @@ import { formatDate } from '@/lib/utils'
 import { SUBCATEGORIES } from '@/lib/navigation'
 import KnowledgeSidebar from '@/components/KnowledgeSidebar'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Ontology',
   description: 'Palantir Ontology knowledge hub — object types, link types, actions, OSDK, and semantic data layer.',

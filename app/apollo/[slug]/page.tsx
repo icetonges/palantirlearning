@@ -6,6 +6,8 @@ import Link from 'next/link'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
 import { formatDate } from '@/lib/utils'
 
+export const dynamic = 'force-dynamic'
+
 interface Props { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

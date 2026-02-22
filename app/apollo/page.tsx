@@ -6,6 +6,8 @@ import { formatDate } from '@/lib/utils'
 import { SUBCATEGORIES } from '@/lib/navigation'
 import KnowledgeSidebar from '@/components/KnowledgeSidebar'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Apollo',
   description: 'Palantir Apollo knowledge hub — software distribution, fleet management, and air-gapped deployments.',

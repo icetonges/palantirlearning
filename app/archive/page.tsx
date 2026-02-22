@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { Metadata } from 'next'
 import { formatDate, groupByYearMonth } from '@/lib/utils'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Archive',
   description: 'Full searchable archive of all knowledge pages, indexed by date and category.',

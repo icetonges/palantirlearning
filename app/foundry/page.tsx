@@ -6,6 +6,8 @@ import { formatDate } from '@/lib/utils'
 import { SUBCATEGORIES } from '@/lib/navigation'
 import KnowledgeSidebar from '@/components/KnowledgeSidebar'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title:       'Foundry',
   description: 'Palantir Foundry knowledge hub — transforms, datasets, Workshop, Contour, ML, and more.',
