@@ -2,6 +2,9 @@
   "name": "palantirlearning",
   "version": "1.0.0",
   "private": true,
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,7 +13,7 @@
     "db:push": "prisma db push",
     "db:pull": "prisma db pull",
     "db:studio": "prisma studio",
-    "db:seed": "npx ts-node prisma/seed.ts",
+    "db:seed": "npx prisma db seed",
     "db:generate": "prisma generate",
     "postinstall": "prisma generate"
   },
