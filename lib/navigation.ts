@@ -40,6 +40,15 @@ export const NAV_ITEMS: NavItem[] = [
     badge:       'Courses',
   },
   {
+    label:       'Media',
+    href:        '/media',
+    icon:        '▣',
+    description: 'Videos, podcasts, and talks — all Palantir-focused, all free',
+    private:     false,
+    color:       'from-rose-900 to-rose-700',
+    badge:       'New',
+  },
+  {
     label:       'Foundry',
     href:        '/foundry',
     icon:        '⬡',

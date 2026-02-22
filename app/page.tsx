@@ -6,6 +6,8 @@ import { formatDate } from '@/lib/utils'
 import NewsCard from '@/components/NewsCard'
 import AIChat from '@/components/AIChat'
 
+export const dynamic = 'force-dynamic'
+
 async function getDashboardData() {
   const [recentPages, recentNews, dailySummary, flashcardCount, quizCount] = await Promise.all([
     prisma.knowledgePage.findMany({
@@ -252,6 +254,69 @@ export default async function HomePage() {
                 News will appear here after the scraper runs (daily at 7 AM UTC).
               </div>
             )}
+          </div>
+        </section>
+
+        {/* ── Media Hub Preview ─────────────────────────────────────────────── */}
+        <section>
+          <div className="flex items-baseline justify-between mb-6">
+            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+              <span className="text-rose-400">▣</span> Media Hub
+            </h2>
+            <Link href="/media" className="text-palantir-400 hover:text-palantir-300 text-sm transition-colors">
+              View all media →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Featured Video Card */}
+            <div className="md:col-span-2 bg-night-900 border border-night-800 hover:border-night-700 rounded-xl overflow-hidden group transition-all">
+              <Link href="/media">
+                <div className="relative w-full aspect-video bg-gradient-to-br from-red-950 to-night-950 flex items-center justify-center overflow-hidden">
+                  <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_50%,rgba(239,68,68,0.3),transparent)]"></div>
+                  <div className="relative text-center">
+                    <div className="w-16 h-16 rounded-full bg-red-900/50 border border-red-700/50 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                      <span className="text-3xl text-red-300 ml-1">▶</span>
+                    </div>
+                    <div className="text-white font-semibold text-sm">AIPCon 5 — Official Livestream</div>
+                    <div className="text-night-400 text-xs mt-1">100+ orgs · NGA · Anduril · bp · L3Harris</div>
+                  </div>
+                  <div className="absolute top-2 left-2">
+                    <span className="text-[9px] px-2 py-0.5 bg-red-900/60 text-red-300 border border-red-700/50 rounded font-mono">AIPCon</span>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <p className="text-night-400 text-xs">Watch embedded on the Media Hub page — plus AIPCon 8, DevCon talks, and official tutorial videos.</p>
+                </div>
+              </Link>
+            </div>
+
+            {/* Podcast + Reading Cards */}
+            <div className="space-y-4">
+              <a href="https://open.spotify.com/show/2vVlRBHoBjUPgAYeASqd5z" target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-3 p-4 bg-night-900 border border-green-900/40 hover:border-green-800/60 rounded-xl transition-all group">
+                <div className="w-10 h-10 rounded-lg bg-green-900/40 border border-green-700/40 flex items-center justify-center shrink-0 text-xl">♬</div>
+                <div>
+                  <div className="text-white text-sm font-semibold group-hover:text-green-200 transition-colors">Palantir Weekly</div>
+                  <div className="text-night-500 text-xs">Weekly podcast — free on Spotify</div>
+                </div>
+              </a>
+              <Link href="/media#podcasts"
+                className="flex items-center gap-3 p-4 bg-night-900 border border-violet-900/40 hover:border-violet-800/60 rounded-xl transition-all group">
+                <div className="w-10 h-10 rounded-lg bg-violet-900/40 border border-violet-700/40 flex items-center justify-center shrink-0 text-xl">🎙️</div>
+                <div>
+                  <div className="text-white text-sm font-semibold group-hover:text-violet-200 transition-colors">More Podcasts</div>
+                  <div className="text-night-500 text-xs">Karp interviews, defense tech, analysis</div>
+                </div>
+              </Link>
+              <a href="https://blog.palantir.com" target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-3 p-4 bg-night-900 border border-blue-900/40 hover:border-blue-800/60 rounded-xl transition-all group">
+                <div className="w-10 h-10 rounded-lg bg-blue-900/40 border border-blue-700/40 flex items-center justify-center shrink-0 text-xl">📰</div>
+                <div>
+                  <div className="text-white text-sm font-semibold group-hover:text-blue-200 transition-colors">Palantir Blog</div>
+                  <div className="text-night-500 text-xs">Official engineering & company posts</div>
+                </div>
+              </a>
+            </div>
           </div>
         </section>
 
