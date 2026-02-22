@@ -24,10 +24,16 @@ export default function AIChat() {
   }])
   const [input,    setInput]      = useState('')
   const [loading,  setLoading]    = useState(false)
-  const bottomRef                 = useRef<HTMLDivElement>(null)
+  const bottomRef    = useRef<HTMLDivElement>(null)
+  const mountedRef   = useRef(false)
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    // Skip scroll on initial mount — only scroll when new messages arrive
+    if (!mountedRef.current) {
+      mountedRef.current = true
+      return
+    }
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [messages])
 
   const sendMessage = async (text: string) => {

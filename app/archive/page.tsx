@@ -42,7 +42,7 @@ export default async function ArchivePage({ searchParams }: { searchParams: Prom
       } : {}),
     },
     orderBy: { createdAt: 'desc' },
-    select: { id: true, slug: true, title: true, category: true, subCategory: true, excerpt: true, tags: true, sourceType: true, viewCount: true, createdAt: true },
+    select: { id: true, slug: true, title: true, category: true, subCategory: true, excerpt: true, aiSummary: true, tags: true, sourceType: true, viewCount: true, createdAt: true },
   })
 
   const grouped = groupByYearMonth(pages.map(p => ({ ...p, createdAt: new Date(p.createdAt) })))
@@ -126,15 +126,23 @@ export default async function ArchivePage({ searchParams }: { searchParams: Prom
                             </span>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="text-white text-sm font-medium group-hover:text-palantir-200 transition-colors line-clamp-1">
-                              {page.title}
-                            </h4>
-                            <div className="flex items-center gap-3 mt-1">
-                              {page.subCategory && <span className="text-night-500 text-xs">{page.subCategory}</span>}
-                              {page.tags.slice(0, 2).map((tag) => (
+                            <div className="flex items-start justify-between gap-4">
+                              <h4 className="text-white text-sm font-medium group-hover:text-palantir-200 transition-colors line-clamp-1">
+                                {page.title}
+                              </h4>
+                              <span className="text-night-600 text-xs shrink-0">{formatDate(page.createdAt)}</span>
+                            </div>
+                            {(page.aiSummary || page.excerpt) && (
+                              <p className="text-night-400 text-xs mt-1 line-clamp-2 leading-relaxed">
+                                {page.aiSummary || page.excerpt}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-3 mt-2">
+                              {page.subCategory && <span className="text-night-500 text-xs font-mono">{page.subCategory}</span>}
+                              {page.tags.slice(0, 3).map((tag) => (
                                 <span key={tag} className="text-[10px] text-night-600 font-mono">#{tag}</span>
                               ))}
-                              <span className="text-night-700 text-xs ml-auto">{page.viewCount} views · {formatDate(page.createdAt)}</span>
+                              <span className="text-night-700 text-xs ml-auto">{page.viewCount} views · {page.sourceType}</span>
                             </div>
                           </div>
                         </Link>
