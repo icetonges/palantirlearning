@@ -71,28 +71,13 @@ function EditPanel({
   const [title,    setTitle]    = useState(page.title)
   const [category, setCategory] = useState<Category>(page.category)
   const [subCat,   setSubCat]   = useState(page.subCategory || '')
-  const [content,  setContent]  = useState<string | null>(null) // lazy load
   const [loading,  setLoading]  = useState(false)
   const [error,    setError]    = useState('')
-  const [loadingContent, setLoadingContent] = useState(false)
 
-  // Lazy load full content
+  // Lazy load full content — open the page directly to edit content body
   useEffect(() => {
-    setLoadingContent(true)
-    fetch(`/api/notes?q=${encodeURIComponent(page.title)}`)
-      .then(r => r.json())
-      .then(d => {
-        const found = d.pages?.find((p: KPage) => p.id === page.id)
-        // We need full content — fetch individual page
-        return fetch(`/api/pages/${page.category.toLowerCase()}/${page.slug}`)
-      })
-      .catch(() => null)
-      .finally(() => setLoadingContent(false))
-
-    // Simpler: just use the excerpt as starting content if full not available
-    setContent(page.aiSummary || page.excerpt || '')
-    setLoadingContent(false)
-  }, [page])
+    // Content editing is done via the full page link below
+  }, [page.id])
 
   const handleCatChange = (cat: Category) => {
     setCategory(cat)
@@ -299,7 +284,7 @@ export default function ArchivePage() {
   const [editPage,     setEditPage]     = useState<KPage | null>(null)
   const [deletePage,   setDeletePage]   = useState<KPage | null>(null)
   const [view,         setView]         = useState<'list' | 'grid'>('list')
-  const searchRef = useRef<NodeJS.Timeout>()
+  const searchRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchPages = useCallback(async (q = '', cat = '', sub = '') => {
