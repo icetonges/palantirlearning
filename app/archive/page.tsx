@@ -193,13 +193,22 @@ function EditPanel({
             )}
           </div>
 
-          {/* View full note link */}
-          <Link
-            href={`/${CAT_HREF[page.category] || 'archive'}/${page.slug}`}
-            className="flex items-center gap-2 px-3 py-2 bg-night-800 hover:bg-night-700 border border-night-700 text-night-300 hover:text-white rounded-lg text-xs transition-all"
-          >
-            <span>↗</span> Open full page to edit content
-          </Link>
+          {/* Edit content — links to /notes?edit=ID for full markdown editor */}
+          <div className="space-y-2">
+            <Link
+              href={`/notes?edit=${page.id}`}
+              className="flex items-center gap-2 px-3 py-2.5 bg-palantir-900/30 hover:bg-palantir-800/40 border border-palantir-700/50 text-palantir-300 hover:text-white rounded-lg text-xs font-medium transition-all w-full"
+            >
+              <span className="text-sm">✎</span> Edit full content (title, body, markdown)
+            </Link>
+            <Link
+              href={`/${CAT_HREF[page.category] || 'archive'}/${page.slug}`}
+              target="_blank"
+              className="flex items-center gap-2 px-3 py-2 bg-night-800 hover:bg-night-700 border border-night-700 text-night-500 hover:text-night-300 rounded-lg text-xs transition-all w-full"
+            >
+              <span>↗</span> View published page (read-only)
+            </Link>
+          </div>
 
           {error && (
             <div className="p-3 bg-red-900/20 border border-red-700/40 rounded-lg text-red-300 text-xs">{error}</div>

@@ -64,6 +64,9 @@ export default async function ArchiveSubPage({ params }: Props) {
         <Link href={`/study?generateFrom=${page.id}`} className="flex items-center gap-2 px-4 py-2 bg-rose-900/20 hover:bg-rose-800/30 border border-rose-700/40 text-rose-300 rounded-lg text-sm transition-all">
           ◇ Generate Flashcards ({page.flashcards.length})
         </Link>
+        <Link href={`/notes?edit=${page.id}`} className="flex items-center gap-2 px-4 py-2 bg-night-800 hover:bg-night-700 border border-night-700 text-night-300 rounded-lg text-sm transition-all">
+          ✎ Edit This Page
+        </Link>
         <Link href="/notes" className="flex items-center gap-2 px-4 py-2 bg-night-800 hover:bg-night-700 border border-night-700 text-night-300 rounded-lg text-sm transition-all">
           + Add Related Note
         </Link>
