@@ -284,7 +284,7 @@ export default function ArchivePage() {
   const [editPage,     setEditPage]     = useState<KPage | null>(null)
   const [deletePage,   setDeletePage]   = useState<KPage | null>(null)
   const [view,         setView]         = useState<'list' | 'grid'>('list')
-  const searchRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const searchRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchPages = useCallback(async (q = '', cat = '', sub = '') => {
