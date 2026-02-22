@@ -2,7 +2,7 @@
 import { prisma } from '@/lib/db'
 import Link from 'next/link'
 import { Metadata } from 'next'
-import { formatDate, truncate } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
 import { SUBCATEGORIES } from '@/lib/navigation'
 import KnowledgeSidebar from '@/components/KnowledgeSidebar'
 

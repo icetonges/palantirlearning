@@ -2,7 +2,7 @@
 // app/notes/page.tsx — Note input + Document upload (Self-Evolving Engine)
 
 import { useState, useRef } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 
 const CATEGORIES = ['FOUNDRY', 'ONTOLOGY', 'AIP', 'APOLLO', 'GENERAL']
 const SUBCATS: Record<string, string[]> = {
@@ -22,7 +22,6 @@ const CAT_COLORS: Record<string, string> = {
 }
 
 export default function NotesPage() {
-  const router       = useRouter()
   const searchParams = useSearchParams()
   const initialCat   = searchParams.get('category') || 'FOUNDRY'
 

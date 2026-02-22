@@ -43,18 +43,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return user.email === process.env.OWNER_EMAIL
     },
 
-    async session({ session, token }) {
+    async session({ session, token: _token }) {
       if (session?.user) {
         session.user.isOwner = session.user.email === process.env.OWNER_EMAIL
       }
       return session
     },
 
-    async jwt({ token, user }) {
+    async jwt({ token: _tok, user }) {
       if (user) {
-        token.isOwner = user.email === process.env.OWNER_EMAIL
+        _tok.isOwner = user.email === process.env.OWNER_EMAIL
       }
-      return token
+      return _tok
     },
   },
 

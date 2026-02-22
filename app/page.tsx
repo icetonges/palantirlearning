@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { NAV_ITEMS, KNOWLEDGE_TABS } from '@/lib/navigation'
-import { formatDate, truncate } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
 import NewsCard from '@/components/NewsCard'
 import AIChat from '@/components/AIChat'
 
