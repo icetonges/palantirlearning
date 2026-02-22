@@ -51,7 +51,13 @@ export default async function OntologySubPage({ params }: Props) {
       <MarkdownRenderer content={page.content} />
       <div className="flex flex-wrap gap-3 mt-8 pt-6 border-t border-night-800">
         <Link href={`/study?generateFrom=${page.id}`} className="flex items-center gap-2 px-4 py-2 bg-rose-900/20 hover:bg-rose-800/30 border border-rose-700/40 text-rose-300 rounded-lg text-sm transition-all">◇ Generate Flashcards ({page.flashcards.length})</Link>
-        <Link href="/notes?category=ONTOLOGY" className="flex items-center gap-2 px-4 py-2 bg-violet-900/20 hover:bg-violet-800/30 border border-violet-700/40 text-violet-300 rounded-lg text-sm transition-all">+ Add Related Note</Link>
+                <Link
+          href={`/notes?edit=${page.id}`}
+          className="flex items-center gap-2 px-4 py-2 bg-night-800 hover:bg-night-700 border border-night-700 text-night-300 rounded-lg text-sm transition-all"
+        >
+          ✎ Edit
+        </Link>
+<Link href="/notes?category=ONTOLOGY" className="flex items-center gap-2 px-4 py-2 bg-violet-900/20 hover:bg-violet-800/30 border border-violet-700/40 text-violet-300 rounded-lg text-sm transition-all">+ Add Related Note</Link>
       </div>
     </div>
   )

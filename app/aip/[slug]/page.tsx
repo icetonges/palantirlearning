@@ -53,7 +53,13 @@ export default async function AIPSubPage({ params }: Props) {
         <Link href={`/study?generateFrom=${page.id}`} className="flex items-center gap-2 px-4 py-2 bg-rose-900/20 hover:bg-rose-800/30 border border-rose-700/40 text-rose-300 rounded-lg text-sm transition-all">
           ◇ Generate Flashcards ({page.flashcards.length})
         </Link>
-        <Link href="/notes?category=AIP" className="flex items-center gap-2 px-4 py-2 bg-cyan-900/20 hover:bg-cyan-800/30 border border-cyan-700/40 text-cyan-300 rounded-lg text-sm transition-all">
+                <Link
+          href={`/notes?edit=${page.id}`}
+          className="flex items-center gap-2 px-4 py-2 bg-night-800 hover:bg-night-700 border border-night-700 text-night-300 rounded-lg text-sm transition-all"
+        >
+          ✎ Edit
+        </Link>
+<Link href="/notes?category=AIP" className="flex items-center gap-2 px-4 py-2 bg-cyan-900/20 hover:bg-cyan-800/30 border border-cyan-700/40 text-cyan-300 rounded-lg text-sm transition-all">
           + Add Related Note
         </Link>
       </div>

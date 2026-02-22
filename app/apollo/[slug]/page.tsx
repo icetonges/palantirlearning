@@ -53,7 +53,13 @@ export default async function ApolloSubPage({ params }: Props) {
         <Link href={`/study?generateFrom=${page.id}`} className="flex items-center gap-2 px-4 py-2 bg-rose-900/20 hover:bg-rose-800/30 border border-rose-700/40 text-rose-300 rounded-lg text-sm transition-all">
           ◇ Generate Flashcards ({page.flashcards.length})
         </Link>
-        <Link href="/notes?category=APOLLO" className="flex items-center gap-2 px-4 py-2 bg-emerald-900/20 hover:bg-emerald-800/30 border border-emerald-700/40 text-emerald-300 rounded-lg text-sm transition-all">
+                <Link
+          href={`/notes?edit=${page.id}`}
+          className="flex items-center gap-2 px-4 py-2 bg-night-800 hover:bg-night-700 border border-night-700 text-night-300 rounded-lg text-sm transition-all"
+        >
+          ✎ Edit
+        </Link>
+<Link href="/notes?category=APOLLO" className="flex items-center gap-2 px-4 py-2 bg-emerald-900/20 hover:bg-emerald-800/30 border border-emerald-700/40 text-emerald-300 rounded-lg text-sm transition-all">
           + Add Related Note
         </Link>
       </div>
