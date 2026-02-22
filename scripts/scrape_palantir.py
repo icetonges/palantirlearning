@@ -363,6 +363,54 @@ def trigger_summary() -> bool:
         return False
 
 
+def scrape_palantir_community() -> list[dict]:
+    """Palantir Community (community.palantir.com) — recent discussions and announcements."""
+    items = []
+
+    # Community RSS / public feeds
+    feeds = [
+        ('https://community.palantir.com/latest.rss',            'Palantir Community — Latest'),
+        ('https://community.palantir.com/c/announcements.rss',   'Palantir Community — Announcements'),
+        ('https://community.palantir.com/c/foundry.rss',         'Palantir Community — Foundry'),
+        ('https://community.palantir.com/c/ontology.rss',        'Palantir Community — Ontology'),
+        ('https://community.palantir.com/c/aip.rss',             'Palantir Community — AIP'),
+    ]
+
+    for feed_url, source in feeds:
+        feed_items = parse_rss(feed_url)
+        for item in feed_items:
+            item['source'] = source
+            items.append(item)
+
+    # Fallback: scrape the JSON API that Discourse (community platform) exposes
+    if not items:
+        endpoints = [
+            'https://community.palantir.com/latest.json?order=activity',
+            'https://community.palantir.com/c/announcements/l/latest.json',
+        ]
+        for endpoint in endpoints:
+            data = get(endpoint)
+            if not data:
+                continue
+            for topic in data.get('topic_list', {}).get('topics', [])[:15]:
+                title = topic.get('title', '')
+                if not title:
+                    continue
+                slug  = topic.get('slug', '')
+                tid   = topic.get('id', '')
+                url   = f"https://community.palantir.com/t/{slug}/{tid}"
+                items.append({
+                    'title':       f"[Community] {title}",
+                    'summary':     f"Views: {topic.get('views', 0)} · Replies: {topic.get('reply_count', 0)} · {topic.get('excerpt', '')}",
+                    'url':         url,
+                    'publishedAt': topic.get('created_at', ''),
+                    'source':      'Palantir Community',
+                })
+
+    log.info(f"Palantir Community: {len(items)} items")
+    return items
+
+
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
@@ -382,6 +430,7 @@ def main():
         scrape_defense_rss,
         scrape_youtube_palantir,
         scrape_tech_news_rss,
+        scrape_palantir_community,
     ]
 
     for scraper in scrapers:

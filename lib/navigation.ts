@@ -31,6 +31,15 @@ export const NAV_ITEMS: NavItem[] = [
     color:       'from-palantir-800 to-palantir-600',
   },
   {
+    label:       'Learn',
+    href:        '/learn',
+    icon:        '▶',
+    description: 'Official Palantir courses from learn.palantir.com — beginner to advanced, all roles',
+    private:     false,
+    color:       'from-amber-900 to-amber-700',
+    badge:       'Courses',
+  },
+  {
     label:       'Foundry',
     href:        '/foundry',
     icon:        '⬡',
