@@ -1,14 +1,10 @@
 // app/api/upload/route.ts — Document upload → extract text → generate knowledge page
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { generateDatedSlug, markdownToPlainText, truncate } from '@/lib/utils'
 import { processDocument, generateFlashcards } from '@/lib/gemini'
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.isOwner) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const formData    = await req.formData()
   const file        = formData.get('file') as File | null
   const category    = (formData.get('category') as string) || 'GENERAL'

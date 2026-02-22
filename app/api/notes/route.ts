@@ -1,14 +1,10 @@
 // app/api/notes/route.ts — Save note → auto-generate knowledge page
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { generateDatedSlug, markdownToPlainText, truncate } from '@/lib/utils'
 import { summarizeNote } from '@/lib/gemini'
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.isOwner) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const { title, category, subCategory, content } = await req.json()
 
   if (!title?.trim() || !content?.trim() || !category) {
@@ -54,9 +50,6 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.isOwner) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const { searchParams } = new URL(req.url)
   const category = searchParams.get('category')
 
@@ -70,9 +63,6 @@ export async function GET(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.isOwner) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const { id } = await req.json()
   await prisma.knowledgePage.delete({ where: { id } })
   return NextResponse.json({ success: true })

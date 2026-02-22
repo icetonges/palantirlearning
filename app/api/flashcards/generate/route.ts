@@ -1,13 +1,9 @@
 // app/api/flashcards/generate/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { generateFlashcards } from '@/lib/gemini'
 
 export async function GET(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.isOwner) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const { searchParams } = new URL(req.url)
   const list     = searchParams.get('list')
   const category = searchParams.get('category')
@@ -27,9 +23,6 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.isOwner) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const { pageId, count = 8 } = await req.json()
 
   if (!pageId) return NextResponse.json({ error: 'pageId is required' }, { status: 400 })

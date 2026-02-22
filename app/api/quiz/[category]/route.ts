@@ -1,13 +1,9 @@
 // app/api/quiz/[category]/route.ts — Generate quiz questions via Gemini
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { generateQuiz } from '@/lib/gemini'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ category: string }> }) {
-  const session = await auth()
-  if (!session?.user?.isOwner) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const { category }  = await params
   const { searchParams } = new URL(req.url)
   const count = parseInt(searchParams.get('count') || '10')
