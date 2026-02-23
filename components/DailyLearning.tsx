@@ -60,11 +60,15 @@ function Prose({ text, headingClass }: { text: string; headingClass: string }) {
 }
 
 function fmt(text: string): React.ReactNode {
-  return text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((p, i) => {
+  // Split on bold, inline code, and markdown links [text](url)
+  return text.split(/(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g).map((p, i) => {
     if (p.startsWith('**') && p.endsWith('**'))
       return <strong key={i} className="text-white font-semibold">{p.slice(2, -2)}</strong>
     if (p.startsWith('`') && p.endsWith('`'))
       return <code key={i} className="text-cyan-300 bg-night-800 px-1 py-0.5 rounded text-xs font-mono">{p.slice(1, -1)}</code>
+    const link = p.match(/^\[([^\]]+)\]\(([^)]+)\)$/)
+    if (link)
+      return <a key={i} href={link[2]} target="_blank" rel="noopener noreferrer" className="text-palantir-400 hover:text-palantir-300 underline underline-offset-2">{link[1]}</a>
     return p
   })
 }
