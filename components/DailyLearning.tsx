@@ -153,19 +153,27 @@ export function DailyLearningBlock() {
   const [lesson,  setLesson]  = useState<DailyLesson | null>(null)
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(false)
+  const [errDetail, setErrDetail] = useState('')
 
   useEffect(() => {
     fetch('/api/daily-lesson')
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
-      .then(data => { if (data.error) { setError(true); return }; setLesson(data) })
-      .catch(() => setError(true))
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) {
+          setErrDetail(`${data.error}: ${data.detail || ''}`)
+          setError(true)
+          return
+        }
+        setLesson(data)
+      })
+      .catch(e => { setErrDetail(String(e)); setError(true) })
       .finally(() => setLoading(false))
   }, [])
 
   if (error) return (
-    <div className="p-4 bg-night-900 border border-amber-900/40 rounded-xl text-center">
-      <p className="text-amber-400 text-sm font-medium mb-1">⚠ Daily content unavailable</p>
-      <p className="text-night-500 text-xs">Gemini API key not configured or unreachable</p>
+    <div className="p-4 bg-night-900 border border-amber-900/40 rounded-xl text-center space-y-1">
+      <p className="text-amber-400 text-sm font-medium">⚠ Daily content unavailable</p>
+      <p className="text-night-500 text-xs font-mono break-all">{errDetail || 'Unknown error'}</p>
     </div>
   )
 

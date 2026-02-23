@@ -1,7 +1,10 @@
-// app/api/daily-lesson/route.ts — Fetch/generate today's daily lesson
+// app/api/daily-lesson/route.ts
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { generateDailyTopic, generatePalantir101 } from '@/lib/gemini'
+
+// Extend Vercel function timeout to 60s — two Gemini calls need breathing room
+export const maxDuration = 60
 
 function todayUTC(): Date {
   const d = new Date()
@@ -17,7 +20,7 @@ export async function GET() {
   const today = todayUTC()
   const seed  = dateSeed(today)
 
-  // 1. Try DB cache first (table may not exist yet — handle gracefully)
+  // 1. Return from DB cache if available
   try {
     const cached = await prisma.dailyLesson.findUnique({ where: { lessonDate: today } })
     if (cached) {
@@ -30,41 +33,47 @@ export async function GET() {
         cached:       true,
       })
     }
-  } catch {
-    // Table doesn't exist yet (migration pending) — continue to generate without caching
-    console.warn('[daily-lesson] DB table not ready, generating without cache')
+  } catch (e) {
+    console.warn('[daily-lesson] DB read failed:', String(e))
   }
 
-  // 2. Generate fresh content from Gemini
+  // 2. Generate sequentially (not parallel) to avoid timeout on cold starts
+  let topic: Awaited<ReturnType<typeof generateDailyTopic>>
+  let p101:  string
+
   try {
-    const [topic, p101] = await Promise.all([
-      generateDailyTopic(seed),
-      generatePalantir101(seed),
-    ])
-
-    const result = {
-      topicTitle:   topic.title,
-      topicDomain:  topic.domain,
-      topicSubject: topic.subject,
-      topicBody:    topic.body,
-      palantir101:  p101,
-      cached:       false,
-    }
-
-    // 3. Try to persist — silently skip if table missing
-    try {
-      await prisma.dailyLesson.upsert({
-        where:  { lessonDate: today },
-        create: { lessonDate: today, ...result },
-        update: result,
-      })
-    } catch {
-      console.warn('[daily-lesson] Could not cache to DB (table may not exist yet)')
-    }
-
-    return NextResponse.json(result)
-  } catch (err) {
-    console.error('[daily-lesson] Gemini generation failed:', err)
-    return NextResponse.json({ error: 'Generation failed', detail: String(err) }, { status: 500 })
+    topic = await generateDailyTopic(seed)
+  } catch (e) {
+    console.error('[daily-lesson] generateDailyTopic failed:', e)
+    return NextResponse.json({ error: 'topic_failed', detail: String(e) }, { status: 500 })
   }
+
+  try {
+    p101 = await generatePalantir101(seed)
+  } catch (e) {
+    console.error('[daily-lesson] generatePalantir101 failed:', e)
+    return NextResponse.json({ error: 'p101_failed', detail: String(e) }, { status: 500 })
+  }
+
+  const result = {
+    topicTitle:   topic.title,
+    topicDomain:  topic.domain,
+    topicSubject: topic.subject,
+    topicBody:    topic.body,
+    palantir101:  p101,
+    cached:       false,
+  }
+
+  // 3. Persist to DB — silent fail if table missing
+  try {
+    await prisma.dailyLesson.upsert({
+      where:  { lessonDate: today },
+      create: { lessonDate: today, ...result },
+      update: result,
+    })
+  } catch (e) {
+    console.warn('[daily-lesson] DB write failed (table may not exist):', String(e))
+  }
+
+  return NextResponse.json(result)
 }
