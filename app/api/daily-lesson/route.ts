@@ -1,72 +1,74 @@
-// app/api/scraper/summarize/route.ts — Generate daily AI executive summary
-import { NextRequest, NextResponse } from 'next/server'
+// app/api/daily-lesson/route.ts
+import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { validateScraperToken } from '@/lib/utils'
-import { generateDailySummary } from '@/lib/gemini'
+import { generateDailyTopic, generatePalantir101 } from '@/lib/gemini'
 
 export const maxDuration = 60
 
-export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get('authorization')
-  if (!validateScraperToken(authHeader)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const body = await req.json().catch(() => ({}))
-  const forceRefresh = body?.force === true
-
+function todayUTC(): Date {
   const d = new Date()
-  const today    = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
-  const tomorrow = new Date(today)
-  tomorrow.setUTCDate(today.getUTCDate() + 1)
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
+}
 
-  // If force refresh, delete existing summary first
-  if (forceRefresh) {
-    await prisma.dailySummary.deleteMany({ where: { summaryDate: today } }).catch(() => {})
-  } else {
-    const existing = await prisma.dailySummary.findUnique({ where: { summaryDate: today } })
-    if (existing) {
-      return NextResponse.json({ message: 'Summary already exists for today', id: existing.id })
+function dateSeed(date: Date): number {
+  const str = date.toISOString().slice(0, 10).replace(/-/g, '')
+  return parseInt(str, 10) % 997
+}
+
+export async function GET() {
+  const today = todayUTC()
+  const seed  = dateSeed(today)
+
+  // 1. Return from DB cache if available
+  try {
+    const cached = await prisma.dailyLesson.findUnique({ where: { lessonDate: today } })
+    if (cached) {
+      return NextResponse.json({
+        topicTitle:   cached.topicTitle,
+        topicDomain:  cached.topicDomain,
+        topicSubject: cached.topicSubject,
+        topicBody:    cached.topicBody,
+        palantir101:  cached.palantir101,
+        cached:       true,
+      })
     }
+  } catch (e) {
+    console.warn('[daily-lesson] DB read failed:', String(e))
   }
 
-  // Get today's news — fall back to last 48h if nothing today
-  let newsItems = await prisma.newsItem.findMany({
-    where:   { scrapedAt: { gte: today, lt: tomorrow } },
-    orderBy: { scrapedAt: 'desc' },
-    take:    50,
-    select:  { title: true, summary: true, source: true, tags: true, aiSummary: true },
-  })
+  // 2. Generate both in parallel
+  let topicResult: Awaited<ReturnType<typeof generateDailyTopic>>
+  let p101Result: string
 
-  if (newsItems.length === 0) {
-    const twoDaysAgo = new Date(today)
-    twoDaysAgo.setUTCDate(today.getUTCDate() - 2)
-    newsItems = await prisma.newsItem.findMany({
-      where:   { scrapedAt: { gte: twoDaysAgo } },
-      orderBy: { scrapedAt: 'desc' },
-      take:    50,
-      select:  { title: true, summary: true, source: true, tags: true, aiSummary: true },
+  try {
+    const results = await Promise.all([
+      generateDailyTopic(seed),
+      generatePalantir101(seed),
+    ])
+    topicResult = results[0]
+    p101Result  = results[1]
+  } catch (e) {
+    console.error('[daily-lesson] Generation failed:', e)
+    return NextResponse.json({ error: 'generation_failed', detail: String(e) }, { status: 500 })
+  }
+
+  const dbPayload = {
+    topicTitle:   topicResult.title,
+    topicDomain:  topicResult.domain,
+    topicSubject: topicResult.subject,
+    topicBody:    topicResult.body,
+    palantir101:  p101Result,
+  }
+
+  try {
+    await prisma.dailyLesson.upsert({
+      where:  { lessonDate: today },
+      create: { lessonDate: today, ...dbPayload },
+      update: dbPayload,
     })
+  } catch (e) {
+    console.warn('[daily-lesson] DB write failed:', String(e))
   }
 
-  if (newsItems.length === 0) {
-    return NextResponse.json({ message: 'No news items found, skipping summary' })
-  }
-
-  const items = newsItems.map(n => ({
-    title:   n.title,
-    summary: n.aiSummary || n.summary,
-    source:  n.source,
-    tags:    n.tags as string[],
-  }))
-
-  const content = await generateDailySummary(items)
-
-  const summary = await prisma.dailySummary.upsert({
-    where:  { summaryDate: today },
-    create: { summaryDate: today, content, topicsCount: [...new Set(newsItems.flatMap(n => n.tags))].length, articlesCount: newsItems.length },
-    update: { content, topicsCount: [...new Set(newsItems.flatMap(n => n.tags))].length, articlesCount: newsItems.length },
-  })
-
-  return NextResponse.json({ id: summary.id, articlesCount: newsItems.length })
+  return NextResponse.json({ ...dbPayload, cached: false })
 }
