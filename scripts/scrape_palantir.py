@@ -28,7 +28,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 # ─── Config ───────────────────────────────────────────────────────────────────
-SITE_URL      = os.environ.get('SITE_URL', 'https://palantirlearning.vercel.app')
+SITE_URL      = os.environ.get('SITE_URL', '')  # Must be set in GitHub Secrets
 SCRAPER_TOKEN = os.environ.get('SCRAPER_TOKEN', '')
 GEMINI_KEY    = os.environ.get('GEMINI_API_KEY', '')
 NEWSAPI_KEY   = os.environ.get('NEWSAPI_KEY', '')
@@ -41,9 +41,12 @@ HEADERS = {'User-Agent': 'PalantirLearning/1.0 (palantirlearning.vercel.app)'}
 
 # Log token info at startup (safe — never logs the actual value)
 log.info(f"SCRAPER_TOKEN: {'SET (len=' + str(len(SCRAPER_TOKEN)) + ')' if SCRAPER_TOKEN else 'EMPTY — will fail auth'}")
-log.info(f"SITE_URL set:  {bool(SITE_URL)}")
+log.info(f"SITE_URL:      {SITE_URL if SITE_URL else 'EMPTY — will fail'}")
 if not SCRAPER_TOKEN:
-    log.error("SCRAPER_TOKEN env var is empty. Set it in GitHub Secrets as SCRAPER_TOKEN.")
+    log.error("SCRAPER_TOKEN env var is empty. Set it in GitHub Secrets.")
+    sys.exit(1)
+if not SITE_URL:
+    log.error("SITE_URL env var is empty. Set it in GitHub Secrets to your Vercel domain.")
     sys.exit(1)
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
