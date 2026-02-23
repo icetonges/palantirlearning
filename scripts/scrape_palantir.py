@@ -39,6 +39,13 @@ log = logging.getLogger(__name__)
 
 HEADERS = {'User-Agent': 'PalantirLearning/1.0 (palantirlearning.vercel.app)'}
 
+# Log token info at startup (safe — never logs the actual value)
+log.info(f"SCRAPER_TOKEN: {'SET (len=' + str(len(SCRAPER_TOKEN)) + ')' if SCRAPER_TOKEN else 'EMPTY — will fail auth'}")
+log.info(f"SITE_URL set:  {bool(SITE_URL)}")
+if not SCRAPER_TOKEN:
+    log.error("SCRAPER_TOKEN env var is empty. Set it in GitHub Secrets as SCRAPER_TOKEN.")
+    sys.exit(1)
+
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def get(url: str, params: dict = None, headers: dict = None, timeout: int = 15) -> Optional[dict]:
