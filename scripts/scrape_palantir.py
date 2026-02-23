@@ -131,9 +131,10 @@ def scrape_sec_edgar() -> list[dict]:
 
 def scrape_hacker_news() -> list[dict]:
     """Hacker News stories mentioning Palantir (via Algolia API)."""
+    seven_days_ago = int((datetime.now(timezone.utc) - timedelta(days=7)).timestamp())
     data = get(
         'https://hn.algolia.com/api/v1/search',
-        params={'query': 'palantir', 'numericFilters': 'created_at_i>1700000000', 'hitsPerPage': 15}
+        params={'query': 'palantir', 'numericFilters': f'created_at_i>{seven_days_ago}', 'hitsPerPage': 20}
     )
     if not data:
         return []
@@ -184,14 +185,14 @@ def scrape_newsapi() -> list[dict]:
         log.warning("No NEWSAPI_KEY — skipping NewsAPI")
         return []
 
-    yesterday = (datetime.now(timezone.utc) - timedelta(days=2)).strftime('%Y-%m-%d')
+    seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).strftime('%Y-%m-%d')
     data = get(
         'https://newsapi.org/v2/everything',
         params={
-            'q':        'Palantir OR "Palantir Foundry" OR "Palantir AIP"',
-            'from':     yesterday,
+            'q':        'Palantir OR "Palantir Foundry" OR "Palantir AIP" OR "PLTR"',
+            'from':     seven_days_ago,
             'sortBy':   'publishedAt',
-            'pageSize': 20,
+            'pageSize': 30,
             'language': 'en',
             'apiKey':   NEWSAPI_KEY,
         }
@@ -318,8 +319,8 @@ def deduplicate(items: list[dict]) -> list[dict]:
 def post_to_app(items: list[dict], endpoint: str = '/api/scraper/ingest') -> bool:
     """Send items to the PalantirLearning app."""
     if not SCRAPER_TOKEN:
-        log.error("SCRAPER_TOKEN not set — cannot POST to app")
-        return False
+        log.error("SCRAPER_TOKEN not set — cannot POST to app. Set it in GitHub Secrets.")
+        sys.exit(1)
 
     try:
         r = requests.post(
@@ -332,10 +333,16 @@ def post_to_app(items: list[dict], endpoint: str = '/api/scraper/ingest') -> boo
             },
             timeout=60,
         )
+        log.info(f"POST {endpoint} → HTTP {r.status_code}")
+        if r.status_code == 401:
+            log.error("401 Unauthorized — SCRAPER_TOKEN in GitHub Secrets does not match Vercel env var.")
+            sys.exit(1)
         r.raise_for_status()
         result = r.json()
-        log.info(f"Ingest result: created={result.get('created')}, skipped={result.get('skipped')}")
+        log.info(f"Ingest result: created={result.get('created')}, skipped={result.get('skipped')}, total={result.get('total')}")
         return True
+    except SystemExit:
+        raise
     except Exception as e:
         log.error(f"POST to app failed: {e}")
         return False
@@ -456,7 +463,10 @@ def main():
     log.info("Triggering daily AI executive summary…")
     trigger_summary()
 
-    log.info("=== PalantirLearning Scraper — Done ===")
+    log.info(f"=== PalantirLearning Scraper — Done. {len(unique_items)} unique items found ===")
+
+    if len(unique_items) == 0 and SCRAPER_TOKEN:
+        log.warning("Zero items scraped — all sources returned nothing new or all were duplicates.")
 
 
 if __name__ == '__main__':
