@@ -269,7 +269,7 @@ export async function generateDailyTopic(seed: number): Promise<{
 const PALANTIR_101_ANGLES = [
   'the Ontology as the semantic layer that unifies all Palantir products',
   'how Foundry Transforms create a governed, versioned data pipeline',
-  'AIP and how it wraps LLMs inside Palantir's governance model',
+  "AIP and how it wraps LLMs inside Palantir's governance model",
   'Apollo as the DevOps backbone for multi-cloud and air-gapped deployments',
   'the OSDK and how it lets external apps consume Ontology objects',
   'the data flow: Raw → Bronze → Silver → Gold layers in Foundry',
