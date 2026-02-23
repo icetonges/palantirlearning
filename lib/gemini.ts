@@ -134,25 +134,74 @@ ${content.slice(0, 6000)}`,
   )
 }
 
+// Sources excluded from executive briefing — too technical/community-focused
+const EXCLUDED_SOURCES = [
+  'palantir community',
+  'palantir github',
+  'github',
+  'hacker news',
+  'reddit',
+  'r/palantir',
+  'youtube',
+]
+
+function isExecSource(source: string): boolean {
+  const s = source.toLowerCase()
+  return !EXCLUDED_SOURCES.some(ex => s.includes(ex))
+}
+
 export async function generateDailySummary(
   items: Array<{ title: string; summary: string; source: string; tags: string[] }>
 ) {
-  const itemsText = items
-    .map((i) => `- [${i.tags.join(', ')}] ${i.title} (${i.source}): ${i.summary}`)
+  // Filter to executive-relevant sources only
+  const execItems = items.filter(i => isExecSource(i.source))
+
+  // Prioritise high-signal tags: contracts, earnings, partnerships, product releases
+  const priority = ['CONTRACT', 'EARNINGS', 'PARTNERSHIP', 'RELEASE', 'AIP', 'APOLLO', 'FOUNDRY', 'ONTOLOGY', 'CRITICISM', 'GENERAL']
+  const sorted = [...execItems].sort((a, b) => {
+    const aScore = Math.min(...a.tags.map(t => priority.indexOf(t)).filter(i => i >= 0))
+    const bScore = Math.min(...b.tags.map(t => priority.indexOf(t)).filter(i => i >= 0))
+    return (aScore === Infinity ? 99 : aScore) - (bScore === Infinity ? 99 : bScore)
+  })
+
+  const itemsText = sorted.slice(0, 30)
+    .map(i => `- [${i.tags.join(', ')}] ${i.title} (${i.source}): ${i.summary}`)
     .join('\n')
+
   const todayStr = new Date().toLocaleDateString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   })
+
   const { text } = await gemini(
-    `Today is ${todayStr}. Create a concise executive intelligence briefing from these Palantir news items.
-Title it: "Daily Palantir Intelligence Briefing — ${todayStr}"
-Use markdown headers (## for sections). Lead with the most significant developments.
-Be analytical — note implications for developers and enterprise users.
-Do NOT invent or guess dates — only reference today: ${todayStr}
+    `Today is ${todayStr}. Write a sharp executive intelligence briefing on Palantir Technologies.
+Title: "Daily Palantir Intelligence Briefing — ${todayStr}"
+
+Structure with these markdown sections (## headers), only include a section if there is relevant news:
+## Key Development
+The single most significant story — what happened and why it matters strategically.
+
+## Contracts & Government
+New contract awards, government partnerships, defense deployments.
+
+## Product & Platform Updates
+New features, releases, or technical announcements across Foundry, AIP, Ontology, Apollo.
+
+## Market & Business
+Earnings signals, investor news, partnerships, analyst commentary.
+
+## Strategic Implications
+2-3 bullet points: what this week's news means for enterprise customers and developers.
+
+Rules:
+- Executive tone — concise, analytical, no fluff
+- Focus on business impact and strategic significance
+- Do NOT reference community forums, GitHub repos, Reddit, or YouTube
+- Do NOT fabricate dates — today is ${todayStr}
+- If a section has no news, omit it entirely
 
 News items:
 ${itemsText}`,
-    'You are a senior Palantir market analyst writing a daily technical intelligence briefing. Never fabricate dates.'
+    'You are a senior analyst at a Palantir-focused research firm writing a daily C-suite intelligence brief. Be sharp, specific, and analytical.'
   )
   return text
 }
