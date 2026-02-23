@@ -50,57 +50,53 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* ── Hero ──────────────────────────────────────────────────────────── */}
+      {/* ── Hero — compact wide strip ─────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-night-950 border-b border-night-800">
-        <div className="absolute inset-0 bg-grid opacity-50" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-palantir-950/10 to-night-950/80" />
+        <div className="absolute inset-0 bg-grid opacity-30" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="flex flex-col items-start gap-6 max-w-3xl">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-palantir-900/30 border border-palantir-700/40 rounded-full">
-              <span className="w-1.5 h-1.5 bg-palantir-400 rounded-full animate-pulse" />
-              <span className="text-palantir-300 text-xs font-mono">Self-Evolving Knowledge Platform</span>
-            </div>
-
-            <h1 className="text-5xl sm:text-6xl font-bold text-white leading-tight tracking-tight">
-              Master the{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-palantir-400 to-cyan-400">
-                Palantir
-              </span>{' '}
-              Stack
-            </h1>
-
-            <p className="text-night-300 text-xl leading-relaxed">
-              Your personal knowledge hub for Palantir Foundry, Ontology, AIP, and Apollo.
-              Daily AI intelligence briefings, interactive study tools, and auto-evolving documentation.
-            </p>
-
-            <div className="flex flex-wrap gap-4 pt-2">
-              {KNOWLEDGE_TABS.map((tab) => (
-                <Link
-                  key={tab.href}
-                  href={tab.href}
-                  className="flex items-center gap-2 px-4 py-2 bg-night-800 hover:bg-night-700 border border-night-700 hover:border-palantir-500/50 rounded-lg text-sm font-medium text-night-200 hover:text-white transition-all"
-                >
-                  <span>{tab.icon}</span>
-                  {tab.label}
-                </Link>
-              ))}
-            </div>
-
-            {/* Stats strip */}
-            <div className="flex flex-wrap gap-6 pt-4 border-t border-night-800 w-full">
-              {[
-                { label: 'Knowledge Pages', value: recentPages.length + '+' },
-                { label: 'Flashcards',      value: flashcardCount.toString() },
-                { label: 'Quiz Sessions',   value: quizCount.toString() },
-                { label: 'News Items',      value: recentNews.length + '+' },
-              ].map((stat) => (
-                <div key={stat.label}>
-                  <div className="text-2xl font-bold text-white font-mono">{stat.value}</div>
-                  <div className="text-night-400 text-xs">{stat.label}</div>
+            {/* Left: title + tagline */}
+            <div className="flex items-center gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-1.5 h-1.5 bg-palantir-400 rounded-full animate-pulse" />
+                  <span className="text-palantir-300 text-[10px] font-mono uppercase tracking-widest">Self-Evolving Knowledge Platform</span>
                 </div>
-              ))}
+                <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight tracking-tight">
+                  Master the{' '}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-palantir-400 to-cyan-400">Palantir</span>
+                  {' '}Stack
+                </h1>
+              </div>
+            </div>
+
+            {/* Right: nav pills + stats */}
+            <div className="flex flex-col gap-3 items-end">
+              {/* Domain pills */}
+              <div className="flex flex-wrap gap-1.5 justify-end">
+                {KNOWLEDGE_TABS.map((tab) => (
+                  <Link key={tab.href} href={tab.href}
+                    className="flex items-center gap-1.5 px-2.5 py-1 bg-night-800 hover:bg-night-700 border border-night-700 hover:border-palantir-500/50 rounded-lg text-xs font-medium text-night-300 hover:text-white transition-all">
+                    <span className="text-xs">{tab.icon}</span>
+                    {tab.label}
+                  </Link>
+                ))}
+              </div>
+              {/* Stats inline */}
+              <div className="flex gap-5">
+                {[
+                  { label: 'Pages',    value: recentPages.length + '+' },
+                  { label: 'Cards',    value: flashcardCount.toString() },
+                  { label: 'Quizzes', value: quizCount.toString() },
+                  { label: 'News',     value: recentNews.length + '+' },
+                ].map((s) => (
+                  <div key={s.label} className="text-center">
+                    <div className="text-lg font-bold text-white font-mono leading-none">{s.value}</div>
+                    <div className="text-night-600 text-[10px]">{s.label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

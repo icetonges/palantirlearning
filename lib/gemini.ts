@@ -200,34 +200,51 @@ export async function generateDailyTopic(seed: number): Promise<{
   const entry = TOPIC_POOL[seed % TOPIC_POOL.length]
   const { domain, subject, topic } = entry
 
-  const prompt = `You are a senior Palantir engineer writing a focused daily learning brief for an internal knowledge platform.
+  const prompt = `You are a senior Palantir engineer. Return ONLY valid JSON (no markdown fences) for this daily learning topic:
 
-Write a structured, ~400 word technical essay on the following:
-- Subject Area: ${domain} → ${subject}
-- Specific Topic: ${topic}
+Topic: ${topic}
+Domain: ${domain}
+Subject: ${subject}
 
-Structure your response EXACTLY like this (use these exact markdown headers):
+Return this exact JSON shape:
+{
+  "headline": "One punchy sentence: what ${topic} is and why it matters (max 20 words)",
+  "connectionMap": [
+    {"from": "SourceA", "to": "TargetA", "label": "action verb"},
+    {"from": "SourceB", "to": "TargetB", "label": "action verb"},
+    {"from": "SourceC", "to": "TargetC", "label": "action verb"}
+  ],
+  "processSteps": [
+    {"step": 1, "title": "Step name (2-3 words)", "desc": "What happens here (max 12 words)"},
+    {"step": 2, "title": "Step name (2-3 words)", "desc": "What happens here (max 12 words)"},
+    {"step": 3, "title": "Step name (2-3 words)", "desc": "What happens here (max 12 words)"},
+    {"step": 4, "title": "Step name (2-3 words)", "desc": "What happens here (max 12 words)"}
+  ],
+  "keyPoints": [
+    {"icon": "⚡", "title": "Core Concept", "body": "The mental model in 2 sentences."},
+    {"icon": "🔗", "title": "How It Connects", "body": "How this relates to 2 other Palantir products in 2 sentences."},
+    {"icon": "⚠", "title": "Common Gotcha", "body": "The specific mistake engineers make and how to avoid it."},
+    {"icon": "🎯", "title": "Why It Matters", "body": "What mastering this unlocks in the Palantir stack."}
+  ],
+  "codeSnippet": "A short 5-8 line real code example (Python or TypeScript) for ${topic}. Use actual Palantir API patterns."
+}
 
-## Subject: ${domain} — ${subject}
+Be technical and specific. Real API names, real patterns. No generic advice.`
 
-One sentence that clearly states what ${subject} is within the Palantir stack and why it matters.
+  const result = await geminiJSON<{
+    headline: string
+    connectionMap: Array<{ from: string; to: string; label: string }>
+    processSteps: Array<{ step: number; title: string; desc: string }>
+    keyPoints: Array<{ icon: string; title: string; body: string }>
+    codeSnippet: string
+  }>(prompt)
 
-## How It Connects
-
-Two to three sentences explaining how ${subject} relates to 2-3 other Palantir components (e.g. how Transforms feeds the Ontology, how OSDK connects Foundry to AIP, etc.).
-
-## Today's Focus: ${topic}
-
-Three to four paragraphs of genuinely in-depth explanation of ${topic}. Include:
-- The core concept and mental model
-- A practical pattern, real configuration detail, or code approach
-- A common mistake or gotcha engineers encounter
-- How mastering this unlocks the next level of Palantir work
-
-Write for a developer who knows software engineering but is 3-6 months into Palantir. Be technical, specific, and direct. No fluff. Real details only.`
-
-  const { text } = await gemini(prompt)
-  return { title: topic, domain, subject, body: text }
+  return {
+    title:  topic,
+    domain,
+    subject,
+    body:   JSON.stringify(result),
+  }
 }
 
 // ─── Palantir 101 Daily Rotation ──────────────────────────────────────────────
@@ -247,26 +264,35 @@ const PALANTIR_101_ANGLES = [
 export async function generatePalantir101(seed: number): Promise<string> {
   const angle = PALANTIR_101_ANGLES[seed % PALANTIR_101_ANGLES.length]
 
-  const prompt = `You are a Palantir expert writing a daily "Palantir 101" brief for a knowledge platform used by developers learning the Palantir stack.
+  const prompt = `You are a Palantir expert. Return ONLY valid JSON (no markdown fences) for today's Palantir 101 overview.
 
 Today's angle: ${angle}
 
-Write ~400 words structured exactly as follows:
+Return this exact JSON shape:
+{
+  "tagline": "One sentence capturing the essence of the Palantir stack (max 18 words)",
+  "stack": [
+    {"name": "Foundry", "icon": "⬡", "role": "Short role description (max 8 words)", "color": "blue", "connects": ["Ontology"]},
+    {"name": "Ontology", "icon": "◈", "role": "Short role description (max 8 words)", "color": "violet", "connects": ["AIP", "Foundry"]},
+    {"name": "AIP", "icon": "✦", "role": "Short role description (max 8 words)", "color": "cyan", "connects": ["Ontology"]},
+    {"name": "Apollo", "icon": "◎", "role": "Short role description (max 8 words)", "color": "emerald", "connects": ["Foundry", "AIP"]}
+  ],
+  "dataFlow": [
+    {"stage": "Raw", "label": "Source data", "detail": "S3, databases, APIs"},
+    {"stage": "Bronze", "label": "Cleaned", "detail": "Deduped, typed, validated"},
+    {"stage": "Silver", "label": "Joined", "detail": "Linked across sources"},
+    {"stage": "Gold", "label": "Objects", "detail": "Ontology-backed entities"}
+  ],
+  "learningPath": [
+    {"week": "Wk 1–2", "focus": "Foundry Core", "action": "Complete Learn.Palantir Foundry 101 + build 2 transforms", "why": "Everything runs on Foundry datasets"},
+    {"week": "Wk 3–4", "focus": "Ontology Design", "action": "Model 3 object types, add link types and properties", "why": "Ontology is what AIP reasons about"},
+    {"week": "Wk 5–6", "focus": "AIP + OSDK", "action": "Build one AIP Logic pipeline connected to your Ontology", "why": "Connect AI safely to governed data"}
+  ],
+  "insight": "The one insight that separates engineers who truly get Palantir from those who just memorize docs. Max 25 words. Make it sharp and specific."
+}
 
-## The Palantir Tech Stack
+Frame the stack descriptions and insight around today's angle: ${angle}. Be opinionated and specific.`
 
-Two concise paragraphs giving a crisp overview of Palantir's four core products (Foundry, Ontology layer, AIP, Apollo) and how they relate. Frame it around today's angle: ${angle}.
-
-## The Best Way to Learn Palantir
-
-Two to three paragraphs giving the most effective learning strategy for the Palantir stack:
-- What to learn first and why (with a clear rationale, not generic advice)
-- Which hands-on exercises and official resources to prioritize
-- A concrete weekly study plan a developer could actually follow
-- One insight that separates people who truly "get" Palantir from those who memorize docs
-
-Be opinionated, specific, and direct. Use real product names, real resource URLs if known (palantir.com/docs, build.palantir.com, learn.palantir.com). No filler content.`
-
-  const { text } = await gemini(prompt)
-  return text
+  const result = await geminiJSON<object>(prompt)
+  return JSON.stringify(result)
 }
