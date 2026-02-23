@@ -194,75 +194,38 @@ const TOPIC_POOL = [
   { domain: 'APOLLO',   subject: 'Air-Gapped Deployments',     topic: 'Offline and classified network deployments' },
 ]
 
-export interface TopicVisuals {
-  processSteps: Array<{ step: number; title: string; desc: string }>
-  connections:  Array<{ from: string; to: string; label: string }>
-  codeSnippet:  string
-  keyTags:      string[]
-}
-
-export interface P101Visuals {
-  dataFlow:     Array<{ stage: string; detail: string }>
-  learningPath: Array<{ week: string; focus: string; action: string }>
-  insight:      string
-  stackSummary: Array<{ name: string; icon: string; color: string; role: string }>
-}
-
-// Step 1: generate prose (reliable)
-async function generateTopicProse(domain: string, subject: string, topic: string): Promise<string> {
-  const prompt = `You are a senior Palantir engineer writing a daily learning brief.
-
-Topic: ${topic} (${domain} → ${subject})
-
-Write ~350 words with these exact headers:
-
-## What is ${subject}?
-One clear sentence defining ${subject} in the Palantir stack and why it matters.
-
-## How It Connects
-2–3 sentences: how ${subject} flows into or depends on 2 other Palantir products.
-
-## Today's Focus: ${topic}
-3 focused paragraphs:
-1. The core mental model — what is the key concept?
-2. A practical pattern or real API detail engineers use
-3. The most common mistake and how to avoid it
-
-Be technical, specific, direct. Real product names and API patterns only.`
-  const { text } = await gemini(prompt)
-  return text
-}
-
-// Step 2: generate visual metadata separately (small, fast, optional)
-async function generateTopicVisuals(domain: string, subject: string, topic: string, prose: string): Promise<TopicVisuals | null> {
-  const prompt = `Based on this Palantir topic: "${topic}" (${domain}/${subject})
-
-Return ONLY valid JSON, no markdown fences, no explanation:
-{"processSteps":[{"step":1,"title":"2-3 word name","desc":"max 10 words"},{"step":2,"title":"2-3 word name","desc":"max 10 words"},{"step":3,"title":"2-3 word name","desc":"max 10 words"},{"step":4,"title":"2-3 word name","desc":"max 10 words"}],"connections":[{"from":"ComponentA","to":"ComponentB","label":"feeds"},{"from":"ComponentB","to":"ComponentC","label":"exposes"},{"from":"ComponentC","to":"ComponentD","label":"triggers"}],"codeSnippet":"5-7 line Python or TypeScript example using real Palantir APIs for ${topic}","keyTags":["tag1","tag2","tag3","tag4"]}`
-  try {
-    return await geminiJSON<TopicVisuals>(prompt)
-  } catch {
-    return null
-  }
-}
-
 export async function generateDailyTopic(seed: number): Promise<{
   title: string; domain: string; subject: string; body: string
 }> {
-  const entry  = TOPIC_POOL[seed % TOPIC_POOL.length]
+  const entry = TOPIC_POOL[seed % TOPIC_POOL.length]
   const { domain, subject, topic } = entry
 
-  // Prose always generated first — it's the primary content
-  const prose  = await generateTopicProse(domain, subject, topic)
-  // Visuals generated separately — if this fails, prose still shows
-  const visuals = await generateTopicVisuals(domain, subject, topic, prose)
+  const prompt = `You are a senior Palantir engineer writing a focused daily learning brief.
 
-  return {
-    title:   topic,
-    domain,
-    subject,
-    body:    JSON.stringify({ prose, visuals }),
-  }
+Topic: ${topic} (${domain} → ${subject})
+
+Write ~400 words with these exact markdown headers:
+
+## Subject: ${domain} — ${subject}
+
+One sentence: what ${subject} is in the Palantir stack and why it matters.
+
+## How It Connects
+
+2–3 sentences on how ${subject} relates to 2 other Palantir products.
+
+## Today's Focus: ${topic}
+
+3–4 paragraphs:
+1. The core mental model
+2. A practical pattern or real API detail
+3. The most common mistake and how to avoid it
+4. What mastering this unlocks
+
+Be technical, specific, direct. Real product names and API patterns only.`
+
+  const { text } = await gemini(prompt)
+  return { title: topic, domain, subject, body: text }
 }
 
 // ─── Palantir 101 Daily Rotation ──────────────────────────────────────────────
@@ -272,50 +235,36 @@ const PALANTIR_101_ANGLES = [
   "AIP and how it wraps LLMs inside Palantir's governance model",
   'Apollo as the DevOps backbone for multi-cloud and air-gapped deployments',
   'the OSDK and how it lets external apps consume Ontology objects',
-  'the data flow: Raw → Bronze → Silver → Gold layers in Foundry',
+  'the data flow: Raw to Bronze to Silver to Gold layers in Foundry',
   'how Workshop and Slate turn Ontology data into operational applications',
   'the role of markings and data classification across the Palantir stack',
   'how AIPCon and DevCon demonstrate real-world enterprise deployments',
   'the learning path: Foundry first, then Ontology, then AIP, then Apollo',
 ]
 
-async function generateP101Prose(angle: string): Promise<string> {
+export async function generatePalantir101(seed: number): Promise<string> {
+  const angle = PALANTIR_101_ANGLES[seed % PALANTIR_101_ANGLES.length]
+
   const prompt = `You are a Palantir expert writing a daily overview for developers learning the stack.
 
 Today's angle: ${angle}
 
-Write ~350 words with these exact headers:
+Write ~400 words with these exact markdown headers:
 
 ## The Palantir Stack
-2 paragraphs: crisp overview of Foundry, Ontology, AIP, Apollo and how they connect. Frame it around: ${angle}.
+
+2 paragraphs: crisp overview of Foundry, Ontology, AIP, and Apollo and how they connect. Frame it around: ${angle}.
 
 ## The Best Way to Learn
-2–3 paragraphs: the most effective learning strategy.
-- What to start with and exactly why
-- Which resources to use (learn.palantir.com, build.palantir.com, palantir.com/docs)
-- One weekly study plan a developer could actually follow
-- The single insight that separates people who "get" Palantir from those who just read docs
 
-Be opinionated, specific, direct.`
+2–3 paragraphs:
+- What to start with and exactly why (not generic advice)
+- Which resources to use (learn.palantir.com, build.palantir.com, palantir.com/docs)
+- A concrete weekly study plan a developer could actually follow
+- The single insight that separates people who truly get Palantir from those who just read docs
+
+Be opinionated, specific, direct. Real resource URLs only.`
+
   const { text } = await gemini(prompt)
   return text
-}
-
-async function generateP101Visuals(angle: string): Promise<P101Visuals | null> {
-  const prompt = `For a Palantir 101 overview about "${angle}":
-
-Return ONLY valid JSON, no markdown fences:
-{"dataFlow":[{"stage":"Raw","detail":"S3, DBs, APIs"},{"stage":"Bronze","detail":"Cleaned, typed"},{"stage":"Silver","detail":"Joined, enriched"},{"stage":"Gold","detail":"Ontology objects"}],"learningPath":[{"week":"Wk 1-2","focus":"Foundry Core","action":"Build 2 transforms on Learn.Palantir"},{"week":"Wk 3-4","focus":"Ontology","action":"Model 3 object types with link types"},{"week":"Wk 5-6","focus":"AIP + OSDK","action":"Wire one AIP Logic pipeline to Ontology"}],"insight":"One sharp sentence: the insight that separates engineers who get Palantir from those who just memorize docs. Max 20 words.","stackSummary":[{"name":"Foundry","icon":"⬡","color":"blue","role":"Data pipeline + app platform"},{"name":"Ontology","icon":"◈","color":"violet","role":"Semantic object layer"},{"name":"AIP","icon":"✦","color":"cyan","role":"Governed AI on your data"},{"name":"Apollo","icon":"◎","color":"emerald","role":"Deployment + fleet management"}]}`
-  try {
-    return await geminiJSON<P101Visuals>(prompt)
-  } catch {
-    return null
-  }
-}
-
-export async function generatePalantir101(seed: number): Promise<string> {
-  const angle  = PALANTIR_101_ANGLES[seed % PALANTIR_101_ANGLES.length]
-  const prose  = await generateP101Prose(angle)
-  const visuals = await generateP101Visuals(angle)
-  return JSON.stringify({ prose, visuals })
 }
