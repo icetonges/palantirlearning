@@ -1,4 +1,4 @@
-// app/api/daily-lesson/route.ts — Fetch (and lazily generate) today's daily lesson
+// app/api/daily-lesson/route.ts — Fetch/generate today's daily lesson
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { generateDailyTopic, generatePalantir101 } from '@/lib/gemini'
@@ -8,66 +8,63 @@ function todayUTC(): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
 }
 
-// Deterministic seed from date — same topic all day, rotates daily
 function dateSeed(date: Date): number {
   const str = date.toISOString().slice(0, 10).replace(/-/g, '')
-  return parseInt(str, 10) % 997 // prime modulus for good spread
+  return parseInt(str, 10) % 997
 }
 
 export async function GET() {
   const today = todayUTC()
   const seed  = dateSeed(today)
 
-  // Return cached if already generated today
-  const cached = await prisma.dailyLesson.findUnique({ where: { lessonDate: today } })
-  if (cached) {
-    return NextResponse.json({
-      topicTitle:   cached.topicTitle,
-      topicDomain:  cached.topicDomain,
-      topicSubject: cached.topicSubject,
-      topicBody:    cached.topicBody,
-      palantir101:  cached.palantir101,
-      cached:       true,
-    })
+  // 1. Try DB cache first (table may not exist yet — handle gracefully)
+  try {
+    const cached = await prisma.dailyLesson.findUnique({ where: { lessonDate: today } })
+    if (cached) {
+      return NextResponse.json({
+        topicTitle:   cached.topicTitle,
+        topicDomain:  cached.topicDomain,
+        topicSubject: cached.topicSubject,
+        topicBody:    cached.topicBody,
+        palantir101:  cached.palantir101,
+        cached:       true,
+      })
+    }
+  } catch {
+    // Table doesn't exist yet (migration pending) — continue to generate without caching
+    console.warn('[daily-lesson] DB table not ready, generating without cache')
   }
 
-  // Generate fresh content
+  // 2. Generate fresh content from Gemini
   try {
     const [topic, p101] = await Promise.all([
       generateDailyTopic(seed),
       generatePalantir101(seed),
     ])
 
-    // Persist so subsequent requests are instant
-    await prisma.dailyLesson.upsert({
-      where:  { lessonDate: today },
-      create: {
-        lessonDate:   today,
-        topicTitle:   topic.title,
-        topicDomain:  topic.domain,
-        topicSubject: topic.subject,
-        topicBody:    topic.body,
-        palantir101:  p101,
-      },
-      update: {
-        topicTitle:   topic.title,
-        topicDomain:  topic.domain,
-        topicSubject: topic.subject,
-        topicBody:    topic.body,
-        palantir101:  p101,
-      },
-    })
-
-    return NextResponse.json({
+    const result = {
       topicTitle:   topic.title,
       topicDomain:  topic.domain,
       topicSubject: topic.subject,
       topicBody:    topic.body,
       palantir101:  p101,
       cached:       false,
-    })
+    }
+
+    // 3. Try to persist — silently skip if table missing
+    try {
+      await prisma.dailyLesson.upsert({
+        where:  { lessonDate: today },
+        create: { lessonDate: today, ...result },
+        update: result,
+      })
+    } catch {
+      console.warn('[daily-lesson] Could not cache to DB (table may not exist yet)')
+    }
+
+    return NextResponse.json(result)
   } catch (err) {
-    console.error('[daily-lesson] Generation failed:', err)
-    return NextResponse.json({ error: 'Generation failed' }, { status: 500 })
+    console.error('[daily-lesson] Gemini generation failed:', err)
+    return NextResponse.json({ error: 'Generation failed', detail: String(err) }, { status: 500 })
   }
 }

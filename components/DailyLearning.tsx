@@ -223,21 +223,38 @@ export function DailyLearningBlock() {
 
   useEffect(() => {
     fetch('/api/daily-lesson')
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json()
+      })
       .then(data => {
-        if (data.error) { setError(true); return }
+        if (data.error) {
+          console.error('[DailyLearning] API error:', data.detail || data.error)
+          setError(true)
+          return
+        }
         setLesson(data)
       })
-      .catch(() => setError(true))
+      .catch((err) => {
+        console.error('[DailyLearning] Fetch failed:', err)
+        setError(true)
+      })
       .finally(() => setLoading(false))
   }, [])
 
-  if (error) return null // Fail silently — don't break homepage
-
   return (
     <div className="space-y-10">
-      <DailyTopicSection  lesson={lesson} loading={loading} />
-      <Palantir101Section lesson={lesson} loading={loading} />
+      {error ? (
+        <div className="p-4 bg-night-900 border border-night-800 rounded-xl text-center text-night-500 text-sm">
+          <span className="text-amber-500 mr-2">⚠</span>
+          Daily content unavailable — Gemini API key may not be configured.
+        </div>
+      ) : (
+        <>
+          <DailyTopicSection  lesson={lesson} loading={loading} />
+          <Palantir101Section lesson={lesson} loading={loading} />
+        </>
+      )}
     </div>
   )
 }
