@@ -140,14 +140,19 @@ export async function generateDailySummary(
   const itemsText = items
     .map((i) => `- [${i.tags.join(', ')}] ${i.title} (${i.source}): ${i.summary}`)
     .join('\n')
+  const todayStr = new Date().toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  })
   const { text } = await gemini(
-    `Create a concise executive intelligence briefing from these Palantir news items.
-Use markdown headers. Lead with the most significant developments.
+    `Today is ${todayStr}. Create a concise executive intelligence briefing from these Palantir news items.
+Title it: "Daily Palantir Intelligence Briefing — ${todayStr}"
+Use markdown headers (## for sections). Lead with the most significant developments.
 Be analytical — note implications for developers and enterprise users.
+Do NOT invent or guess dates — only reference today: ${todayStr}
 
 News items:
 ${itemsText}`,
-    'You are a senior Palantir market analyst writing a daily technical intelligence briefing.'
+    'You are a senior Palantir market analyst writing a daily technical intelligence briefing. Never fabricate dates.'
   )
   return text
 }
