@@ -18,17 +18,18 @@ export const revalidate = 3600
 
 const ALL_TAGS = ['FOUNDRY', 'ONTOLOGY', 'AIP', 'APOLLO', 'CONTRACT', 'EARNINGS', 'PARTNERSHIP', 'CRITICISM', 'RELEASE']
 
-interface SearchParams { tag?: string; page?: string }
+interface SearchParams { tag?: string; page?: string; briefing?: string }
 
 export default async function NewsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const params  = await searchParams
-  const tag     = params.tag
-  const pageNum = parseInt(params.page || '1')
+  const params     = await searchParams
+  const tag        = params.tag
+  const pageNum    = parseInt(params.page || '1')
+  const briefingId = params.briefing
   const perPage = 18
 
   const whereClause = tag ? { tags: { has: tag as NewsTag } } : undefined
 
-  const [newsItems, dailySummary, totalCount, pastSummaries, contractCount, criticismCount] = await Promise.all([
+  const [newsItems, dailySummary, totalCount, pastSummaries, contractCount, criticismCount, selectedBriefing] = await Promise.all([
     prisma.newsItem.findMany({
       where:   whereClause,
       orderBy: { scrapedAt: 'desc' },
@@ -44,6 +45,9 @@ export default async function NewsPage({ searchParams }: { searchParams: Promise
     }),
     prisma.newsItem.count({ where: { tags: { has: 'CONTRACT' as NewsTag } } }),
     prisma.newsItem.count({ where: { tags: { has: 'CRITICISM' as NewsTag } } }),
+    briefingId
+      ? prisma.dailySummary.findUnique({ where: { id: briefingId } })
+      : null,
   ])
 
   const totalPages = Math.ceil(totalCount / perPage)
@@ -81,19 +85,27 @@ export default async function NewsPage({ searchParams }: { searchParams: Promise
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-3 space-y-6">
-          {dailySummary && !tag && pageNum === 1 && (
-            <section>
-              <div className="flex items-center gap-3 mb-4">
-                <h2 className="text-xl font-bold text-white">AI Executive Briefing</h2>
-                <span className="text-xs px-2 py-0.5 bg-orange-900/30 text-orange-300 rounded border border-orange-700/40 font-mono">
-                  {formatDate(dailySummary.summaryDate)}
-                </span>
-              </div>
-              <div className="bg-night-900 border border-orange-800/40 rounded-xl p-6">
-                <MarkdownRenderer content={dailySummary.content} />
-              </div>
-            </section>
-          )}
+          {(selectedBriefing || (dailySummary && !tag && pageNum === 1)) && (() => {
+            const briefing = selectedBriefing || dailySummary!
+            return (
+              <section>
+                <div className="flex items-center gap-3 mb-4">
+                  <h2 className="text-xl font-bold text-white">AI Executive Briefing</h2>
+                  <span className="text-xs px-2 py-0.5 bg-orange-900/30 text-orange-300 rounded border border-orange-700/40 font-mono">
+                    {formatDate(briefing.summaryDate)}
+                  </span>
+                  {selectedBriefing && (
+                    <Link href="/news" className="ml-auto text-xs text-night-500 hover:text-white transition-colors">
+                      ← Latest briefing
+                    </Link>
+                  )}
+                </div>
+                <div className="bg-night-900 border border-orange-800/40 rounded-xl p-6">
+                  <MarkdownRenderer content={briefing.content} />
+                </div>
+              </section>
+            )
+          })()}
 
           <div className="flex flex-wrap gap-2">
             <Link href="/news" className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${!tag ? 'bg-orange-900/30 border-orange-700/50 text-orange-200' : 'bg-night-800 border-night-700 text-night-400 hover:text-white'}`}>
@@ -148,12 +160,25 @@ export default async function NewsPage({ searchParams }: { searchParams: Promise
           <div>
             <h3 className="text-night-300 text-xs font-mono uppercase tracking-wider mb-3">Past Briefings</h3>
             <div className="space-y-2">
-              {pastSummaries.map((s) => (
-                <div key={s.id} className="p-3 bg-night-900 border border-night-800 rounded-lg">
-                  <div className="text-white text-xs font-medium">{formatDate(s.summaryDate)}</div>
-                  <div className="text-night-500 text-xs mt-1">{s.articlesCount} articles</div>
-                </div>
-              ))}
+              {pastSummaries.map((s) => {
+                const isActive = briefingId === s.id || (!briefingId && s.id === dailySummary?.id)
+                return (
+                  <Link
+                    key={s.id}
+                    href={`/news?briefing=${s.id}`}
+                    className={`block p-3 rounded-lg border transition-all ${
+                      isActive
+                        ? 'bg-orange-900/20 border-orange-700/50 text-orange-200'
+                        : 'bg-night-900 border-night-800 hover:border-night-600 hover:bg-night-800'
+                    }`}
+                  >
+                    <div className={`text-xs font-medium ${isActive ? 'text-orange-200' : 'text-white'}`}>
+                      {formatDate(s.summaryDate)}
+                    </div>
+                    <div className="text-night-500 text-xs mt-1">{s.articlesCount} articles</div>
+                  </Link>
+                )
+              })}
             </div>
           </div>
           <div>
