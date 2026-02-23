@@ -1,14 +1,14 @@
 // lib/gemini.ts
-// Uses @google/genai SDK with gemini-2.5-flash (confirmed working)
+// Primary: Gemini (Google AI Studio). Fallback: Groq (free, fast).
 import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from '@google/genai'
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 
 const MODEL_CHAIN = [
-  'gemini-2.5-flash',
-  'gemini-2.5-flash-lite',
+  'gemini-2.5-flash-lite',  // primary — requested
   'gemini-2.0-flash',
   'gemini-1.5-flash',
+  'gemini-1.5-flash-8b',
 ]
 
 const SAFETY = [
@@ -18,11 +18,53 @@ const SAFETY = [
   { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
 ]
 
-// ─── Core: run with model fallback ───────────────────────────────────────────
+// ─── Groq fallback ────────────────────────────────────────────────────────────
+// Free tier: 14,400 req/day. Models: llama-3.3-70b-versatile, mixtral-8x7b-32768
+const GROQ_MODELS = [
+  'llama-3.3-70b-versatile',
+  'llama-3.1-8b-instant',
+]
+
+async function groqFallback(prompt: string): Promise<{ text: string; model: string }> {
+  const apiKey = process.env.GROQ_API_KEY
+  if (!apiKey) throw new Error('GROQ_API_KEY not set')
+
+  for (const model of GROQ_MODELS) {
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 1024,
+          temperature: 0.7,
+        }),
+      })
+      if (!res.ok) throw new Error(`Groq HTTP ${res.status}`)
+      const data = await res.json()
+      const text = data.choices?.[0]?.message?.content?.trim() ?? ''
+      if (text) {
+        console.log(`[Groq] Success: ${model}`)
+        return { text, model: `groq/${model}` }
+      }
+    } catch (err) {
+      console.error(`[Groq] ${model} failed:`, err instanceof Error ? err.message : String(err))
+      continue
+    }
+  }
+  throw new Error('Groq fallback also failed.')
+}
+
+// ─── Core: Gemini first, Groq if all Gemini models fail ───────────────────────
 export async function gemini(
   prompt: string,
   systemInstruction?: string,
 ): Promise<{ text: string; model: string }> {
+  // Try all Gemini models first
   for (const modelName of MODEL_CHAIN) {
     try {
       const response = await ai.models.generateContent({
@@ -43,7 +85,10 @@ export async function gemini(
       continue
     }
   }
-  throw new Error('Gemini API unavailable after all fallbacks.')
+
+  // All Gemini models failed — try Groq
+  console.warn('[Gemini] All models failed, trying Groq fallback...')
+  return groqFallback(prompt)
 }
 
 // ─── JSON helper ─────────────────────────────────────────────────────────────
