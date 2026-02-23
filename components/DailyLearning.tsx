@@ -161,15 +161,15 @@ export function DailyLearningBlock() {
 
   useEffect(() => {
     fetch('/api/daily-lesson')
-      .then(r => r.json())
-      .then(data => {
-        if (data.error) {
-          setErrDetail(`${data.error}: ${data.detail || ''}`)
-          setError(true)
-          return
-        }
-        setLesson(data)
+      .then(async r => {
+        const text = await r.text()
+        if (!text || !text.trim()) throw new Error(`Empty response (HTTP ${r.status}) — function may have timed out`)
+        let data: Record<string, unknown>
+        try { data = JSON.parse(text) } catch { throw new Error(`Bad JSON (HTTP ${r.status}): ${text.slice(0, 100)}`) }
+        if (data.error) throw new Error(`${data.error}: ${data.detail || ''}`)
+        return data
       })
+      .then(data => setLesson(data as unknown as DailyLesson))
       .catch(e => { setErrDetail(String(e)); setError(true) })
       .finally(() => setLoading(false))
   }, [])

@@ -18,14 +18,14 @@ const SAFETY = [
   { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
 ]
 
-// ─── Groq fallback ────────────────────────────────────────────────────────────
-// Free tier: 14,400 req/day. Models: llama-3.3-70b-versatile, mixtral-8x7b-32768
+// ─── Groq (primary for speed) ─────────────────────────────────────────────────
+// Free tier: 14,400 req/day. Sub-2s responses vs Gemini's 10s+
 const GROQ_MODELS = [
   'llama-3.3-70b-versatile',
   'llama-3.1-8b-instant',
 ]
 
-async function groqFallback(prompt: string): Promise<{ text: string; model: string }> {
+async function groqCall(prompt: string): Promise<{ text: string; model: string }> {
   const apiKey = process.env.GROQ_API_KEY
   if (!apiKey) throw new Error('GROQ_API_KEY not set')
 
@@ -88,7 +88,7 @@ export async function gemini(
 
   // All Gemini models failed — try Groq
   console.warn('[Gemini] All models failed, trying Groq fallback...')
-  return groqFallback(prompt)
+  return groqCall(prompt)
 }
 
 // ─── JSON helper ─────────────────────────────────────────────────────────────
