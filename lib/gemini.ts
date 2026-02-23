@@ -168,3 +168,105 @@ ${extractedText.slice(0, 5000)}`,
     'You are an expert in Palantir technology. Return only valid JSON.'
   )
 }
+
+// ─── Daily Learning Topic ─────────────────────────────────────────────────────
+const TOPIC_POOL = [
+  { domain: 'FOUNDRY',  subject: 'Transforms',                 topic: 'Incremental Transforms in PySpark' },
+  { domain: 'FOUNDRY',  subject: 'Data Connection & Ingestion', topic: 'Raw Data Sources and Magritte connectors' },
+  { domain: 'FOUNDRY',  subject: 'Workshop Apps',              topic: 'Building operational apps in Workshop' },
+  { domain: 'FOUNDRY',  subject: 'Contour Analytics',          topic: 'Cohort analysis and aggregations in Contour' },
+  { domain: 'FOUNDRY',  subject: 'Foundry ML',                 topic: 'Model training and deployment in Foundry ML' },
+  { domain: 'FOUNDRY',  subject: 'Security & Markings',        topic: 'Data markings, labels, and access control' },
+  { domain: 'FOUNDRY',  subject: 'Datasets & Branches',        topic: 'Branch-based data lineage and versioning' },
+  { domain: 'FOUNDRY',  subject: 'OSDK in Foundry',            topic: 'Ontology SDK — TypeScript and Python clients' },
+  { domain: 'ONTOLOGY', subject: 'Object Types',               topic: 'Designing Object Types and property schemas' },
+  { domain: 'ONTOLOGY', subject: 'Link Types',                 topic: 'Many-to-many link types and relationship modeling' },
+  { domain: 'ONTOLOGY', subject: 'Actions & Rules',            topic: 'Writing Actions to mutate ontology state' },
+  { domain: 'ONTOLOGY', subject: 'Time Series',                topic: 'Time series properties and temporal queries' },
+  { domain: 'ONTOLOGY', subject: 'Aggregations',               topic: 'Object Set aggregations and rollups' },
+  { domain: 'AIP',      subject: 'AIP Logic',                  topic: 'Building deterministic AIP Logic pipelines' },
+  { domain: 'AIP',      subject: 'AIP Studio',                 topic: 'Designing agents in AIP Agent Studio' },
+  { domain: 'AIP',      subject: 'Prompt Engineering',         topic: 'Prompt patterns for reliable LLM outputs' },
+  { domain: 'AIP',      subject: 'LLM Configuration',          topic: 'Model selection, temperature, and context length' },
+  { domain: 'AIP',      subject: 'Security & Governance',      topic: 'AIP guardrails, audit logs, and data classification' },
+  { domain: 'APOLLO',   subject: 'Software Distribution',      topic: 'Continuous delivery of services via Apollo' },
+  { domain: 'APOLLO',   subject: 'Fleet Management',           topic: 'Multi-environment fleet topology in Apollo' },
+  { domain: 'APOLLO',   subject: 'Air-Gapped Deployments',     topic: 'Offline and classified network deployments' },
+]
+
+export async function generateDailyTopic(seed: number): Promise<{
+  title: string; domain: string; subject: string; body: string
+}> {
+  const entry = TOPIC_POOL[seed % TOPIC_POOL.length]
+  const { domain, subject, topic } = entry
+
+  const prompt = `You are a senior Palantir engineer writing a focused daily learning brief for an internal knowledge platform.
+
+Write a structured, ~400 word technical essay on the following:
+- Subject Area: ${domain} → ${subject}
+- Specific Topic: ${topic}
+
+Structure your response EXACTLY like this (use these exact markdown headers):
+
+## Subject: ${domain} — ${subject}
+
+One sentence that clearly states what ${subject} is within the Palantir stack and why it matters.
+
+## How It Connects
+
+Two to three sentences explaining how ${subject} relates to 2-3 other Palantir components (e.g. how Transforms feeds the Ontology, how OSDK connects Foundry to AIP, etc.).
+
+## Today's Focus: ${topic}
+
+Three to four paragraphs of genuinely in-depth explanation of ${topic}. Include:
+- The core concept and mental model
+- A practical pattern, real configuration detail, or code approach
+- A common mistake or gotcha engineers encounter
+- How mastering this unlocks the next level of Palantir work
+
+Write for a developer who knows software engineering but is 3-6 months into Palantir. Be technical, specific, and direct. No fluff. Real details only.`
+
+  const { text } = await gemini(prompt)
+  return { title: topic, domain, subject, body: text }
+}
+
+// ─── Palantir 101 Daily Rotation ──────────────────────────────────────────────
+const PALANTIR_101_ANGLES = [
+  'the Ontology as the semantic layer that unifies all Palantir products',
+  'how Foundry Transforms create a governed, versioned data pipeline',
+  'AIP and how it wraps LLMs inside Palantir\'s governance model',
+  'Apollo as the DevOps backbone for multi-cloud and air-gapped deployments',
+  'the OSDK and how it lets external apps consume Ontology objects',
+  'the data flow: Raw → Bronze → Silver → Gold layers in Foundry',
+  'how Workshop and Slate turn Ontology data into operational applications',
+  'the role of markings and data classification across the Palantir stack',
+  'how AIPCon and DevCon demonstrate real-world enterprise deployments',
+  'the learning path: Foundry first, then Ontology, then AIP, then Apollo',
+]
+
+export async function generatePalantir101(seed: number): Promise<string> {
+  const angle = PALANTIR_101_ANGLES[seed % PALANTIR_101_ANGLES.length]
+
+  const prompt = `You are a Palantir expert writing a daily "Palantir 101" brief for a knowledge platform used by developers learning the Palantir stack.
+
+Today's angle: ${angle}
+
+Write ~400 words structured exactly as follows:
+
+## The Palantir Tech Stack
+
+Two concise paragraphs giving a crisp overview of Palantir's four core products (Foundry, Ontology layer, AIP, Apollo) and how they relate. Frame it around today's angle: ${angle}.
+
+## The Best Way to Learn Palantir
+
+Two to three paragraphs giving the most effective learning strategy for the Palantir stack:
+- What to learn first and why (with a clear rationale, not generic advice)
+- Which hands-on exercises and official resources to prioritize
+- A concrete weekly study plan a developer could actually follow
+- One insight that separates people who truly "get" Palantir from those who memorize docs
+
+Be opinionated, specific, and direct. Use real product names, real resource URLs if known (palantir.com/docs, build.palantir.com, learn.palantir.com). No filler content.`
+
+  const { text } = await gemini(prompt)
+  return text
+}

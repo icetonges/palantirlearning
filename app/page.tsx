@@ -5,6 +5,7 @@ import { NAV_ITEMS, KNOWLEDGE_TABS } from '@/lib/navigation'
 import { formatDate } from '@/lib/utils'
 import NewsCard from '@/components/NewsCard'
 import AIChat from '@/components/AIChat'
+import { DailyLearningBlock } from '@/components/DailyLearning'
 
 export const dynamic = 'force-dynamic'
 
@@ -183,6 +184,9 @@ export default async function HomePage() {
             )}
           </div>
         </section>
+
+        {/* ── Daily Learning Sections ──────────────────────────────────────── */}
+        <DailyLearningBlock />
 
         {/* ── Recent Knowledge Pages ───────────────────────────────────────── */}
         <section>

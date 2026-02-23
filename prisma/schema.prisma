@@ -243,3 +243,18 @@ model VerificationToken {
   @@unique([identifier, token])
   @@map("verification_tokens")
 }
+
+/// Daily AI-generated learning content — two sections, cached per date
+model DailyLesson {
+  id             String   @id @default(cuid())
+  lessonDate     DateTime @unique // Midnight UTC of the day
+  topicTitle     String           // e.g. "Pipeline Builder — Incremental Transforms"
+  topicDomain    String           // e.g. "FOUNDRY"
+  topicSubject   String           // e.g. "Transforms"
+  topicBody      String           // ~400 word structured essay
+  palantir101    String           // ~400 word tech stack + learning strategy
+  createdAt      DateTime @default(now())
+
+  @@index([lessonDate])
+  @@map("daily_lessons")
+}
