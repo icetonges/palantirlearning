@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { generateDailyTopic, generatePalantir101 } from '@/lib/gemini'
 
-// Extend Vercel function timeout to 60s — two Gemini calls need breathing room
 export const maxDuration = 60
 
 function todayUTC(): Date {
@@ -37,9 +36,9 @@ export async function GET() {
     console.warn('[daily-lesson] DB read failed:', String(e))
   }
 
-  // 2. Generate sequentially (not parallel) to avoid timeout on cold starts
+  // 2. Generate sequentially to avoid timeout
   let topic: Awaited<ReturnType<typeof generateDailyTopic>>
-  let p101:  string
+  let p101: string
 
   try {
     topic = await generateDailyTopic(seed)
@@ -55,25 +54,26 @@ export async function GET() {
     return NextResponse.json({ error: 'p101_failed', detail: String(e) }, { status: 500 })
   }
 
-  const result = {
+  // DB payload — no 'cached' field, that's only for the API response
+  const dbPayload = {
     topicTitle:   topic.title,
     topicDomain:  topic.domain,
     topicSubject: topic.subject,
     topicBody:    topic.body,
     palantir101:  p101,
-    cached:       false,
   }
 
-  // 3. Persist to DB — silent fail if table missing
+  // 3. Persist — silent fail if table missing
   try {
     await prisma.dailyLesson.upsert({
       where:  { lessonDate: today },
-      create: { lessonDate: today, ...result },
-      update: result,
+      create: { lessonDate: today, ...dbPayload },
+      update: dbPayload,
     })
   } catch (e) {
-    console.warn('[daily-lesson] DB write failed (table may not exist):', String(e))
+    console.warn('[daily-lesson] DB write failed:', String(e))
   }
 
-  return NextResponse.json(result)
+  // Return with 'cached: false' only in the response, not the DB
+  return NextResponse.json({ ...dbPayload, cached: false })
 }
