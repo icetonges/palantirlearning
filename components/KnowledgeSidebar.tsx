@@ -52,7 +52,7 @@ export default function KnowledgeSidebar({ pages, basePath, category, color }: P
   return (
     <aside
       className={`shrink-0 transition-all duration-200 flex flex-col ${
-        collapsed ? 'w-10' : 'w-72'
+        collapsed ? 'w-10' : 'w-96'
       }`}
       style={{ height: 'calc(100vh - 120px)', position: 'sticky', top: '80px' }}
     >
@@ -89,8 +89,8 @@ export default function KnowledgeSidebar({ pages, basePath, category, color }: P
           {/* Scrollable page list */}
           <div
             ref={listRef}
-            className="flex-1 overflow-y-auto pr-1 min-h-0"
-            style={{ scrollbarWidth: 'thin', scrollbarColor: '#243b53 transparent' }}
+            className="sidebar-scroll flex-1 overflow-y-auto pr-1 min-h-0"
+            style={{ scrollbarWidth: 'auto', scrollbarColor: '#486581 #102a43' }}
           >
             {years.length === 0 ? (
               <p className="text-night-500 text-xs px-2 mt-6 text-center leading-relaxed">
