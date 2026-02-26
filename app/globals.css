@@ -1,414 +1,369 @@
-'use client'
-// app/notes/page.tsx — Note editor with live preview + image upload
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-import { useState, useRef, useEffect, useCallback, Suspense } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
-import dynamic from 'next/dynamic'
-
-const DocumentRenderer = dynamic(() => import('@/components/DocumentRenderer'), { ssr: false })
-
-const CATEGORIES = ['FOUNDRY', 'ONTOLOGY', 'AIP', 'APOLLO', 'GENERAL']
-const SUBCATS: Record<string, string[]> = {
-  FOUNDRY:  ['Core Concepts', 'Data Connection & Ingestion', 'Datasets & Branches', 'Transforms', 'PySpark & Python', 'SQL Transforms', 'Contour Analytics', 'Workshop Apps', 'Slate', 'Foundry ML', 'OSDK in Foundry', 'Security & Markings', 'DevTools & CLI'],
-  ONTOLOGY: ['Core Concepts', 'Object Types', 'Link Types', 'Actions & Rules', 'OSDK (TypeScript)', 'OSDK (Python)', 'Time Series', 'Search & Filtering', 'Ontology Sync', 'Aggregations'],
-  AIP:      ['Core Concepts', 'AIP Logic', 'AIP Copilot', 'AIP Studio', 'Function Repository', 'LLM Configuration', 'Prompt Engineering', 'Security & Governance', 'Use Cases', 'Performance'],
-  APOLLO:   ['Core Concepts', 'Software Distribution', 'Fleet Management', 'Enrollment', 'Configuration Policies', 'Health Monitoring', 'Apollo CLI', 'Air-Gapped Deployments', 'Government & DoD'],
-  GENERAL:  ['General', 'Architecture', 'Best Practices', 'Comparison', 'Career'],
-}
-const CAT_COLORS: Record<string, string> = {
-  FOUNDRY:  'border-blue-700/50 bg-blue-900/20 text-blue-300',
-  ONTOLOGY: 'border-violet-700/50 bg-violet-900/20 text-violet-300',
-  AIP:      'border-cyan-700/50 bg-cyan-900/20 text-cyan-300',
-  APOLLO:   'border-emerald-700/50 bg-emerald-900/20 text-emerald-300',
-  GENERAL:  'border-night-700 bg-night-800/20 text-night-300',
-}
-const HREF_MAP: Record<string, string> = {
-  FOUNDRY: 'foundry', ONTOLOGY: 'ontology', AIP: 'aip', APOLLO: 'apollo', GENERAL: 'archive',
+/* ── Dark mode by default ──────────────────────────────────────────────────── */
+:root {
+  color-scheme: dark;
 }
 
-type Mode    = 'note' | 'upload'
-type TabMode = 'write' | 'preview'
-
-interface ExistingPage {
-  id: string; slug: string; title: string; category: string
-  subCategory: string | null; content: string; aiSummary: string | null
-  tags: string[]; viewCount: number; createdAt: string; updatedAt: string
+html {
+  @apply bg-night-950 text-night-100;
+  scroll-behavior: smooth;
 }
 
-function NotesContent() {
-  const searchParams = useSearchParams()
-  const router       = useRouter()
-  const editId       = searchParams.get('edit')
-  const initialCat   = searchParams.get('category') || 'FOUNDRY'
-
-  const [mode,        setMode]        = useState<Mode>('note')
-  const [tabMode,     setTabMode]     = useState<TabMode>('write')
-  const [editPage,    setEditPage]    = useState<ExistingPage | null>(null)
-  const [loadingEdit, setLoadingEdit] = useState(false)
-
-  const [title,    setTitle]    = useState('')
-  const [category, setCategory] = useState(initialCat)
-  const [subCat,   setSubCat]   = useState(SUBCATS[initialCat]?.[0] || '')
-  const [content,  setContent]  = useState('')
-  const [file,     setFile]     = useState<File | null>(null)
-
-  const [loading,       setLoading]       = useState(false)
-  const [imgUploading,  setImgUploading]  = useState(false)
-  const [result,        setResult]        = useState<{ slug: string; category: string; isEdit?: boolean } | null>(null)
-  const [error,         setError]         = useState('')
-
-  const fileInputRef  = useRef<HTMLInputElement>(null)
-  const imgInputRef   = useRef<HTMLInputElement>(null)
-  const textareaRef   = useRef<HTMLTextAreaElement>(null)
-
-  useEffect(() => {
-    if (!editId) return
-    setLoadingEdit(true)
-    fetch(`/api/notes?id=${editId}`)
-      .then(r => r.json())
-      .then(data => {
-        const p: ExistingPage = data.page
-        if (!p) return
-        setEditPage(p); setTitle(p.title); setCategory(p.category)
-        setSubCat(p.subCategory || SUBCATS[p.category]?.[0] || ''); setContent(p.content)
-      })
-      .catch(() => setError('Failed to load page for editing'))
-      .finally(() => setLoadingEdit(false))
-  }, [editId])
-
-  const handleCategoryChange = (cat: string) => {
-    setCategory(cat)
-    if (!editPage) setSubCat(SUBCATS[cat]?.[0] || '')
-  }
-
-  // ── Insert markdown snippet at cursor ──────────────────────────────────────
-  const insertAtCursor = useCallback((before: string, after = '') => {
-    const ta = textareaRef.current
-    if (!ta) return
-    const start = ta.selectionStart
-    const end   = ta.selectionEnd
-    const sel   = content.slice(start, end)
-    const newContent = content.slice(0, start) + before + sel + after + content.slice(end)
-    setContent(newContent)
-    setTimeout(() => {
-      ta.focus()
-      ta.setSelectionRange(start + before.length, start + before.length + sel.length)
-    }, 0)
-  }, [content])
-
-  // ── Image upload ───────────────────────────────────────────────────────────
-  const handleImageUpload = async (imgFile: File) => {
-    setImgUploading(true)
-    try {
-      const fd = new FormData()
-      fd.append('image', imgFile)
-      const res  = await fetch('/api/upload/image', { method: 'POST', body: fd })
-      const data = await res.json()
-      if (data.url) {
-        insertAtCursor(`![${imgFile.name.replace(/\.[^.]+$/, '')}](${data.url})`)
-      }
-    } catch { setError('Image upload failed') }
-    finally { setImgUploading(false) }
-  }
-
-  // ── Toolbar buttons ────────────────────────────────────────────────────────
-  const toolbar = [
-    { label: 'B',   title: 'Bold',          action: () => insertAtCursor('**', '**') },
-    { label: 'I',   title: 'Italic',        action: () => insertAtCursor('*', '*') },
-    { label: 'H2',  title: 'Heading 2',     action: () => insertAtCursor('\n## ', '') },
-    { label: 'H3',  title: 'Heading 3',     action: () => insertAtCursor('\n### ', '') },
-    { label: '—',   title: 'Divider',       action: () => insertAtCursor('\n\n---\n\n', '') },
-    { label: '{ }', title: 'Inline code',   action: () => insertAtCursor('`', '`') },
-    { label: '≡',   title: 'Bullet list',   action: () => insertAtCursor('\n- ', '') },
-    { label: '1.',  title: 'Numbered list', action: () => insertAtCursor('\n1. ', '') },
-    { label: '❝',   title: 'Blockquote',    action: () => insertAtCursor('\n> ', '') },
-    { label: '⬡',   title: 'Table',         action: () => insertAtCursor('\n| Column 1 | Column 2 | Column 3 |\n|---|---|---|\n| Cell | Cell | Cell |\n| Cell | Cell | Cell |\n', '') },
-    { label: '🔗',  title: 'Link',          action: () => insertAtCursor('[', '](https://)') },
-  ]
-
-  // ── Save ───────────────────────────────────────────────────────────────────
-  const handleSubmitNote = async () => {
-    if (!title.trim() || !content.trim()) { setError('Title and content are required.'); return }
-    setLoading(true); setError('')
-    try {
-      if (editPage) {
-        const res  = await fetch('/api/notes', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editPage.id, title, category, subCategory: subCat || null, content }) })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error || 'Update failed')
-        setResult({ slug: data.slug, category: data.category, isEdit: true })
-      } else {
-        const res  = await fetch('/api/notes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, category, subCategory: subCat, content }) })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error || 'Failed to save')
-        setResult({ slug: data.slug, category: data.category })
-        setTitle(''); setContent('')
-      }
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Save failed')
-    } finally { setLoading(false) }
-  }
-
-  const handleUpload = async () => {
-    if (!file) { setError('Please select a file.'); return }
-    setLoading(true); setError('')
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('category', category)
-      formData.append('subCategory', subCat)
-      const res  = await fetch('/api/upload', { method: 'POST', body: formData })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Upload failed')
-      setResult({ slug: data.slug, category: data.category })
-      setFile(null)
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Upload failed')
-    } finally { setLoading(false) }
-  }
-
-  if (loadingEdit) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-24 text-center">
-        <div className="text-4xl animate-spin inline-block mb-4 text-palantir-400">⟳</div>
-        <p className="text-night-400 text-sm">Loading…</p>
-      </div>
-    )
-  }
-
-  const isEditMode = !!editId
-
-  return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-1">
-          {isEditMode && (
-            <button onClick={() => router.back()} className="p-1.5 rounded-lg bg-night-800 hover:bg-night-700 border border-night-700 text-night-400 hover:text-white transition-all text-xs">← Back</button>
-          )}
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <span className="text-palantir-400">{isEditMode ? '✎' : '◱'}</span>
-            {isEditMode ? 'Edit Knowledge Page' : 'Add Knowledge'}
-          </h1>
-        </div>
-        <p className="text-night-400 text-sm mt-1">
-          Notes are rendered as a clean document with full formatting support — tables, images, code, charts.
-        </p>
-      </div>
-
-      {/* Success */}
-      {result && (
-        <div className="mb-6 p-4 bg-green-900/20 border border-green-700/50 rounded-xl">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-green-400">✓</span>
-            <span className="text-green-300 font-semibold">{result.isEdit ? 'Changes saved!' : 'Knowledge page created!'}</span>
-          </div>
-          <div className="flex gap-3">
-            <a href={`/${HREF_MAP[result.category] || 'archive'}/${result.slug}`} className="px-4 py-2 bg-green-800/30 hover:bg-green-700/30 border border-green-700/50 text-green-300 rounded-lg text-sm transition-all">
-              View Page →
-            </a>
-            {!result.isEdit && (
-              <button onClick={() => setResult(null)} className="px-4 py-2 bg-night-800 hover:bg-night-700 border border-night-700 text-night-300 rounded-lg text-sm transition-all">
-                Add Another
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Mode toggle */}
-      {!isEditMode && (
-        <div className="flex gap-1 p-1 bg-night-900 border border-night-700 rounded-xl mb-5">
-          {(['note', 'upload'] as const).map((m) => (
-            <button key={m} onClick={() => setMode(m)}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === m ? 'bg-palantir-700 text-white' : 'text-night-400 hover:text-white'}`}>
-              {m === 'note' ? '✎ Write Note' : '⬆ Upload DOCX / PDF'}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div className="space-y-4">
-        {/* Category */}
-        <div>
-          <label className="block text-night-200 text-sm font-medium mb-2">Knowledge Domain *</label>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-            {CATEGORIES.map((cat) => (
-              <button key={cat} onClick={() => handleCategoryChange(cat)}
-                className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${category === cat ? CAT_COLORS[cat] : 'bg-night-800/50 border-night-700 text-night-400 hover:text-white hover:bg-night-800'}`}>
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Sub-category */}
-        <div>
-          <label className="block text-night-200 text-sm font-medium mb-2">Sub-category</label>
-          <select value={subCat} onChange={(e) => setSubCat(e.target.value)}
-            className="w-full px-4 py-2.5 bg-night-800 border border-night-700 rounded-lg text-white text-sm focus:outline-none focus:border-palantir-500">
-            {(SUBCATS[category] || []).map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
-
-        {(mode === 'note' || isEditMode) ? (
-          <>
-            {/* Title */}
-            <div>
-              <label className="block text-night-200 text-sm font-medium mb-2">Title *</label>
-              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. PySpark Incremental Transforms — Best Practices"
-                className="w-full px-4 py-2.5 bg-night-800 border border-night-700 rounded-lg text-white placeholder-night-500 text-sm focus:outline-none focus:border-palantir-500"
-              />
-            </div>
-
-            {/* Editor / Preview tabs */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex gap-1 p-0.5 bg-night-900 border border-night-700 rounded-lg">
-                  {(['write', 'preview'] as const).map((t) => (
-                    <button key={t} onClick={() => setTabMode(t)}
-                      className={`px-4 py-1.5 rounded-md text-sm transition-all ${tabMode === t ? 'bg-palantir-700 text-white' : 'text-night-400 hover:text-white'}`}>
-                      {t === 'write' ? '✎ Write' : '👁 Preview'}
-                    </button>
-                  ))}
-                </div>
-                <span className="text-night-600 text-xs">{content.length} chars · Markdown supported</span>
-              </div>
-
-              {tabMode === 'write' ? (
-                <>
-                  {/* Toolbar */}
-                  <div className="flex flex-wrap gap-1 p-2 bg-night-900 border border-night-700 border-b-0 rounded-t-lg">
-                    {toolbar.map((btn) => (
-                      <button key={btn.label} onClick={btn.action} title={btn.title}
-                        className="px-2.5 py-1 bg-night-800 hover:bg-night-700 border border-night-700 text-night-300 hover:text-white rounded text-xs font-mono transition-all min-w-[28px] text-center">
-                        {btn.label}
-                      </button>
-                    ))}
-                    {/* Image insert button */}
-                    <button
-                      onClick={() => imgInputRef.current?.click()}
-                      disabled={imgUploading}
-                      title="Insert image"
-                      className="px-2.5 py-1 bg-night-800 hover:bg-night-700 border border-night-700 text-night-300 hover:text-white rounded text-xs transition-all"
-                    >
-                      {imgUploading ? '⟳' : '🖼'}
-                    </button>
-                    <input ref={imgInputRef} type="file" accept="image/*" className="hidden"
-                      onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); e.target.value = '' }} />
-                  </div>
-                  <textarea
-                    ref={textareaRef}
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    rows={26}
-                    placeholder={`# My Note Title\n\n## Overview\n\nWrite your knowledge here. Full Markdown is supported:\n\n## Tables\n\n| Column 1 | Column 2 | Column 3 |\n|---|---|---|\n| Cell | Cell | Cell |\n\n## Code\n\n\`\`\`python\ndef hello():\n    print("Hello Palantir")\n\`\`\`\n\n## Images\n\nUse the 🖼 button in the toolbar to insert images.`}
-                    className="w-full px-4 py-3 bg-night-800 border border-night-700 rounded-b-lg text-white placeholder-night-600 text-sm font-mono leading-relaxed focus:outline-none focus:border-palantir-500 resize-y"
-                  />
-                </>
-              ) : (
-                /* Live preview — white document style */
-                <div className="border border-night-700 rounded-lg overflow-hidden">
-                  <div className="bg-night-900 px-4 py-2 border-b border-night-700 text-night-500 text-xs font-mono">
-                    Preview — as it will appear on the knowledge page
-                  </div>
-                  <div className="bg-slate-100 p-4 sm:p-8 min-h-64">
-                    {content.trim()
-                      ? <DocumentRenderer content={content} />
-                      : <p className="text-slate-400 text-sm italic text-center py-16">Start writing to see a preview…</p>
-                    }
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <button onClick={handleSubmitNote} disabled={loading || !title.trim() || !content.trim()}
-              className="w-full py-3 bg-palantir-700 hover:bg-palantir-600 disabled:bg-night-800 disabled:text-night-500 text-white rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2">
-              {loading ? <><span className="animate-spin">⟳</span> {isEditMode ? 'Saving…' : 'Saving & generating AI summary…'}</> : isEditMode ? '✓ Save Changes' : '◱ Save Note & Generate Page'}
-            </button>
-
-            {isEditMode && editPage && !result && (
-              <div className="flex gap-2">
-                <Link href={`/${HREF_MAP[editPage.category] || 'archive'}/${editPage.slug}`}
-                  className="flex-1 py-2 text-center bg-night-800 hover:bg-night-700 border border-night-700 text-night-400 hover:text-white rounded-lg text-xs transition-all">
-                  ↗ View Published Page
-                </Link>
-                <Link href="/archive" className="flex-1 py-2 text-center bg-night-800 hover:bg-night-700 border border-night-700 text-night-400 hover:text-white rounded-lg text-xs transition-all">
-                  ← Back to Archive
-                </Link>
-              </div>
-            )}
-          </>
-        ) : (
-          <>
-            {/* File upload */}
-            <div>
-              <label className="block text-night-200 text-sm font-medium mb-2">
-                Document * <span className="text-night-500 font-normal">(DOCX, PDF, TXT — max 20MB)</span>
-              </label>
-              <div
-                className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${file ? 'border-palantir-500/60 bg-palantir-900/10' : 'border-night-700 hover:border-palantir-500/40'}`}
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) setFile(f) }}
-              >
-                {file ? (
-                  <div className="space-y-2">
-                    <div className="text-3xl">📄</div>
-                    <div className="text-white font-medium">{file.name}</div>
-                    <div className="text-night-400 text-sm">{(file.size / 1024 / 1024).toFixed(2)} MB</div>
-                    <button onClick={(e) => { e.stopPropagation(); setFile(null) }} className="text-xs text-red-400 hover:text-red-300">Remove</button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="text-4xl">⬆</div>
-                    <div className="text-night-300 font-medium">Click to select or drag & drop</div>
-                    <div className="text-night-500 text-sm">DOCX files will preserve all formatting, tables, and images exactly as in Word</div>
-                    <div className="text-night-600 text-xs">DOCX · PDF · TXT · MD · Max 20MB</div>
-                  </div>
-                )}
-                <input ref={fileInputRef} type="file" accept=".pdf,.docx,.txt,.md" className="hidden"
-                  onChange={(e) => setFile(e.target.files?.[0] || null)} />
-              </div>
-            </div>
-
-            <div className="bg-night-800/50 border border-night-700 rounded-xl p-4 text-sm">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                <div className="flex items-start gap-2">
-                  <span className="text-green-400 mt-0.5">✓</span>
-                  <span className="text-night-300"><strong className="text-white">DOCX</strong> — full fidelity: tables, images, headings, bold, lists all preserved</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-green-400 mt-0.5">✓</span>
-                  <span className="text-night-300"><strong className="text-white">PDF</strong> — text extracted, formatting approximated</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-green-400 mt-0.5">✓</span>
-                  <span className="text-night-300"><strong className="text-white">Markdown/TXT</strong> — rendered directly with full styling</span>
-                </div>
-              </div>
-            </div>
-
-            <button onClick={handleUpload} disabled={loading || !file}
-              className="w-full py-3 bg-palantir-700 hover:bg-palantir-600 disabled:bg-night-800 disabled:text-night-500 text-white rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2">
-              {loading ? <><span className="animate-spin">⟳</span> Uploading & processing…</> : '⬆ Upload & Generate Knowledge Page'}
-            </button>
-          </>
-        )}
-
-        {error && (
-          <div className="p-3 bg-red-900/20 border border-red-700/40 rounded-lg text-red-300 text-sm">{error}</div>
-        )}
-      </div>
-    </div>
-  )
+body {
+  @apply antialiased font-sans;
+  min-height: 100vh;
 }
 
-export default function NotesPage() {
-  return (
-    <Suspense fallback={<div className="max-w-4xl mx-auto px-4 py-24 text-center"><div className="text-4xl animate-spin inline-block text-palantir-400">⟳</div></div>}>
-      <NotesContent />
-    </Suspense>
-  )
+/* ── Highlight.js dark theme ────────────────────────────────────────────────── */
+@import 'highlight.js/styles/github-dark.css';
+
+/* ── Custom scrollbar ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { @apply bg-night-900; }
+::-webkit-scrollbar-thumb  { @apply bg-night-600 rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-night-500; }
+
+/* ── Focus styles ──────────────────────────────────────────────────────────── */
+:focus-visible {
+  @apply outline-none ring-2 ring-palantir-500 ring-offset-2 ring-offset-night-950;
 }
+
+/* ── Selection ─────────────────────────────────────────────────────────────── */
+::selection {
+  @apply bg-palantir-700/40 text-white;
+}
+
+/* ── Prose Palantir (markdown) ─────────────────────────────────────────────── */
+.prose-palantir {
+  @apply text-night-200 leading-relaxed;
+}
+
+.prose-palantir pre {
+  @apply bg-night-900 border border-night-700 rounded-lg p-4 overflow-x-auto my-4 text-sm;
+}
+
+.prose-palantir code:not(pre code) {
+  @apply bg-night-800 text-palantir-200 px-1.5 py-0.5 rounded text-sm font-mono;
+}
+
+/* ── Grid background ───────────────────────────────────────────────────────── */
+.bg-grid {
+  background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%231a7fe6' fill-opacity='0.03'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* ── Animations ────────────────────────────────────────────────────────────── */
+@keyframes fadeIn  { from { opacity: 0; }                            to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+.animate-fade-in  { animation: fadeIn  0.4s ease-in-out; }
+.animate-slide-up { animation: slideUp 0.3s ease-out; }
+
+/* ── Utility: card hover glow ──────────────────────────────────────────────── */
+.card-glow:hover {
+  box-shadow: 0 0 24px -4px rgba(26, 127, 230, 0.15);
+}
+
+/* ── Line clamp utilities ──────────────────────────────────────────────────── */
+.line-clamp-2 { -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-3 { -webkit-line-clamp: 3; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DOCUMENT PAPER STYLES
+   Clean white document rendering — like a real Word/PDF document
+   Applied to DocumentRenderer component for knowledge pages
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.document-paper {
+  background: #ffffff;
+  color: #1a1a2e;
+  border-radius: 4px;
+  box-shadow:
+    0 1px 3px rgba(0,0,0,0.12),
+    0 4px 24px rgba(0,0,0,0.18),
+    0 0 0 1px rgba(0,0,0,0.06);
+  padding: 56px 64px;
+  max-width: 860px;
+  margin: 0 auto;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+@media (max-width: 768px) {
+  .document-paper { padding: 32px 24px; }
+}
+
+/* ── Shared typography for both HTML and Markdown ── */
+.document-paper h1,
+.doc-html h1,
+.doc-markdown h1 {
+  font-size: 1.9em;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.5em;
+  padding-bottom: 0.3em;
+  border-bottom: 2px solid #e2e8f0;
+  line-height: 1.25;
+  font-family: 'Georgia', serif;
+  letter-spacing: -0.02em;
+}
+
+.document-paper h2,
+.doc-html h2,
+.doc-markdown h2 {
+  font-size: 1.4em;
+  font-weight: 700;
+  color: #1e3a5f;
+  margin: 1.8em 0 0.5em;
+  padding-bottom: 0.2em;
+  border-bottom: 1px solid #e2e8f0;
+  line-height: 1.3;
+  font-family: 'Georgia', serif;
+}
+
+.document-paper h3,
+.doc-html h3,
+.doc-markdown h3 {
+  font-size: 1.15em;
+  font-weight: 700;
+  color: #1e3a5f;
+  margin: 1.4em 0 0.4em;
+  font-family: 'Georgia', serif;
+}
+
+.document-paper h4,
+.doc-html h4,
+.doc-markdown h4 {
+  font-size: 1em;
+  font-weight: 700;
+  color: #334155;
+  margin: 1.2em 0 0.3em;
+  font-family: 'Georgia', serif;
+}
+
+.document-paper h5, .document-paper h6,
+.doc-html h5, .doc-html h6,
+.doc-markdown h5, .doc-markdown h6 {
+  font-size: 0.95em;
+  font-weight: 700;
+  color: #475569;
+  margin: 1em 0 0.3em;
+}
+
+.document-paper p,
+.doc-html p,
+.doc-markdown p {
+  color: #1e293b;
+  margin: 0 0 1em;
+  line-height: 1.8;
+}
+
+.document-paper a,
+.doc-html a,
+.doc-markdown a {
+  color: #1d4ed8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.document-paper a:hover,
+.doc-html a:hover,
+.doc-markdown a:hover {
+  color: #1e40af;
+}
+
+.document-paper strong, .document-paper b,
+.doc-html strong, .doc-html b,
+.doc-markdown strong {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.document-paper em, .document-paper i,
+.doc-html em, .doc-html i,
+.doc-markdown em {
+  font-style: italic;
+  color: #334155;
+}
+
+/* ── Tables ── */
+.document-paper table,
+.doc-html table,
+.doc-markdown table,
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  font-size: 0.9em;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  margin: 1.5em 0;
+  border-radius: 4px;
+}
+
+.document-paper th,
+.doc-html th,
+.doc-markdown th {
+  background: #1e3a5f;
+  color: #ffffff;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 0.85em;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border: none;
+}
+
+.document-paper td,
+.doc-html td,
+.doc-markdown td {
+  padding: 9px 14px;
+  color: #1e293b;
+  border-bottom: 1px solid #e2e8f0;
+  border-right: 1px solid #f1f5f9;
+  vertical-align: top;
+}
+
+.document-paper tr:last-child td,
+.doc-html tr:last-child td,
+.doc-markdown tr:last-child td {
+  border-bottom: none;
+}
+
+.document-paper tr:nth-child(even) td,
+.doc-html tr:nth-child(even) td,
+.doc-markdown tr:nth-child(even) td {
+  background: #f8fafc;
+}
+
+.document-paper tr:hover td,
+.doc-html tr:hover td,
+.doc-markdown tr:hover td {
+  background: #eff6ff;
+  transition: background 0.1s;
+}
+
+/* ── Images ── */
+.document-paper img,
+.doc-html img,
+.doc-markdown img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1.5em auto;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+  border: 1px solid #e2e8f0;
+}
+
+.document-paper figure,
+.doc-markdown figure {
+  margin: 1.5em 0;
+  text-align: center;
+}
+
+.document-paper figcaption,
+.doc-markdown figcaption {
+  font-size: 0.8em;
+  color: #64748b;
+  margin-top: 0.5em;
+  font-style: italic;
+}
+
+/* ── Lists ── */
+.document-paper ul,
+.doc-html ul,
+.doc-markdown ul {
+  margin: 0.5em 0 1em 1.5em;
+  padding: 0;
+  color: #1e293b;
+}
+
+.document-paper ol,
+.doc-html ol,
+.doc-markdown ol {
+  margin: 0.5em 0 1em 1.5em;
+  padding: 0;
+  color: #1e293b;
+}
+
+.document-paper li,
+.doc-html li,
+.doc-markdown li {
+  margin: 0.3em 0;
+  line-height: 1.7;
+}
+
+.document-paper li > ul,
+.document-paper li > ol {
+  margin: 0.3em 0 0.3em 1.2em;
+}
+
+/* ── Code blocks ── */
+.document-paper pre,
+.doc-html pre,
+.doc-markdown pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 6px;
+  padding: 1em 1.2em;
+  overflow-x: auto;
+  margin: 1.2em 0;
+  font-size: 0.85em;
+  line-height: 1.6;
+  border: 1px solid #1e293b;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.document-paper code,
+.doc-html code,
+.doc-markdown code,
+.inline-code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+}
+
+.inline-code {
+  background: #f1f5f9;
+  color: #1d4ed8;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 0.87em;
+  border: 1px solid #e2e8f0;
+}
+
+/* ── Blockquotes ── */
+.document-paper blockquote,
+.doc-html blockquote,
+.doc-markdown blockquote {
+  border-left: 4px solid #1e3a5f;
+  margin: 1.2em 0;
+  padding: 0.8em 1.2em;
+  background: #f0f7ff;
+  color: #334155;
+  border-radius: 0 4px 4px 0;
+  font-style: italic;
+}
+
+/* ── Horizontal rule ── */
+.document-paper hr,
+.doc-html hr,
+.doc-markdown hr {
+  border: none;
+  border-top: 2px solid #e2e8f0;
+  margin: 2em 0;
+}
+
+/* ── emoji + icon helpers ── */
+.document-paper .doc-emoji {
+  font-style: normal;
+}
+
