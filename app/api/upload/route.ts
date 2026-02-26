@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { generateDatedSlug, markdownToPlainText, truncate } from '@/lib/utils'
 import { processDocument, generateFlashcards } from '@/lib/gemini'
+import { htmlToMarkdown } from '@/lib/htmlToMarkdown'
 
 export async function POST(req: NextRequest) {
   const formData    = await req.formData()
@@ -36,9 +37,20 @@ export async function POST(req: NextRequest) {
     file.name.endsWith('.docx')
   ) {
     try {
-      const mammoth  = await import('mammoth')
-      const result   = await mammoth.extractRawText({ buffer })
-      extractedText  = result.value
+      const mammoth = await import('mammoth')
+      // convertToHtml with image handler — embeds images as base64 data URIs
+      const result  = await mammoth.convertToHtml(
+        { buffer },
+        {
+          convertImage: mammoth.images.imgElement((image) => {
+            return image.read('base64').then((imageBuffer) => ({
+              src: `data:${image.contentType};base64,${imageBuffer}`,
+            }))
+          }),
+        }
+      )
+      // Store as HTML directly — preserves ALL formatting, tables, images
+      extractedText = result.value
     } catch (e) {
       console.error('[upload] DOCX parse error:', e)
       return NextResponse.json({ error: 'Failed to parse DOCX' }, { status: 422 })

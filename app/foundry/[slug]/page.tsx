@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import Link from 'next/link'
-import MarkdownRenderer from '@/components/MarkdownRenderer'
+import DocumentRenderer from '@/components/DocumentRenderer'
 import { formatDate } from '@/lib/utils'
 
 interface Props { params: Promise<{ slug: string }> }
@@ -117,7 +117,9 @@ export default async function FoundrySubPage({ params }: Props) {
           )}
 
           {/* Main content */}
-          <MarkdownRenderer content={page.content} />
+          <div className="bg-slate-100 rounded-2xl p-4 sm:p-8 -mx-2 sm:mx-0">
+        <DocumentRenderer content={page.content} />
+      </div>
 
           {/* Actions */}
           <div className="flex flex-wrap gap-3 mt-8 pt-6 border-t border-night-800">

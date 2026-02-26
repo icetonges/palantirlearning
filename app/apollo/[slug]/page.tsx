@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import Link from 'next/link'
-import MarkdownRenderer from '@/components/MarkdownRenderer'
+import DocumentRenderer from '@/components/DocumentRenderer'
 import { formatDate } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -48,7 +48,9 @@ export default async function ApolloSubPage({ params }: Props) {
           <p className="text-night-200 text-sm leading-relaxed">{page.aiSummary}</p>
         </div>
       )}
-      <MarkdownRenderer content={page.content} />
+      <div className="bg-slate-100 rounded-2xl p-4 sm:p-8 -mx-2 sm:mx-0">
+        <DocumentRenderer content={page.content} />
+      </div>
       <div className="flex flex-wrap gap-3 mt-8 pt-6 border-t border-night-800">
         <Link href={`/study?generateFrom=${page.id}`} className="flex items-center gap-2 px-4 py-2 bg-rose-900/20 hover:bg-rose-800/30 border border-rose-700/40 text-rose-300 rounded-lg text-sm transition-all">
           ◇ Generate Flashcards ({page.flashcards.length})
