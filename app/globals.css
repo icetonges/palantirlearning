@@ -77,19 +77,19 @@ body {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .document-paper {
-  background: #1a2035;
-  color: #c9d4e8;
-  border-radius: 8px;
-  box-shadow:
-    0 1px 3px rgba(0,0,0,0.4),
-    0 8px 32px rgba(0,0,0,0.5),
-    0 0 0 1px rgba(255,255,255,0.05);
-  padding: 56px 64px;
-  max-width: 860px;
-  margin: 0 auto;
-  font-family: 'Georgia', 'Times New Roman', serif;
-  font-size: 15px;
-  line-height: 1.85;
+  background: rgba(4, 26, 56, 0.4);   /* palantir-950 at 40% — matches AI summary */
+  border: 1px solid rgba(10, 74, 148, 0.4); /* palantir-700 at 40% — matches AI summary */
+  color: #9fb3c8;                      /* night-200 — matches AI summary body text */
+  border-radius: 12px;
+  padding: 32px 36px;
+  width: 100%;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+@media (max-width: 640px) {
+  .document-paper { padding: 20px 16px; }
 }
 
 @media (max-width: 768px) {
@@ -102,10 +102,10 @@ body {
 .doc-markdown h1 {
   font-size: 1.9em;
   font-weight: 700;
-  color: #e2eaf8;
+  color: #d9e2ec;
   margin: 0 0 0.5em;
   padding-bottom: 0.3em;
-  border-bottom: 2px solid #2d3f5e;
+  border-bottom: 1px solid rgba(10, 74, 148, 0.4);
   line-height: 1.25;
   font-family: 'Georgia', serif;
   letter-spacing: -0.02em;
@@ -116,10 +116,10 @@ body {
 .doc-markdown h2 {
   font-size: 1.4em;
   font-weight: 700;
-  color: #7eb8f7;
+  color: #4d9fff;
   margin: 1.8em 0 0.5em;
   padding-bottom: 0.2em;
-  border-bottom: 1px solid #2d3f5e;
+  border-bottom: 1px solid rgba(10, 74, 148, 0.3);
   line-height: 1.3;
   font-family: 'Georgia', serif;
 }
@@ -129,7 +129,7 @@ body {
 .doc-markdown h3 {
   font-size: 1.15em;
   font-weight: 700;
-  color: #93c5fd;
+  color: #80bfff;
   margin: 1.4em 0 0.4em;
   font-family: 'Georgia', serif;
 }
@@ -139,7 +139,7 @@ body {
 .doc-markdown h4 {
   font-size: 1em;
   font-weight: 700;
-  color: #a5b4cc;
+  color: #9fb3c8;
   margin: 1.2em 0 0.3em;
   font-family: 'Georgia', serif;
 }
@@ -156,9 +156,9 @@ body {
 .document-paper p,
 .doc-html p,
 .doc-markdown p {
-  color: #c9d4e8;
+  color: #9fb3c8;
   margin: 0 0 1em;
-  line-height: 1.85;
+  line-height: 1.8;
 }
 
 .document-paper a,
@@ -178,7 +178,7 @@ body {
 .doc-html strong, .doc-html b,
 .doc-markdown strong {
   font-weight: 700;
-  color: #e2eaf8;
+  color: #d9e2ec;
 }
 
 .document-paper em, .document-paper i,
@@ -212,8 +212,8 @@ body {
 .document-paper th,
 .doc-html th,
 .doc-markdown th {
-  background: #1e3d6b;
-  color: #d4e6ff;
+  background: rgba(10, 74, 148, 0.6);
+  color: #d9e2ec;
   font-weight: 600;
   text-align: left;
   padding: 10px 14px;
@@ -227,9 +227,9 @@ body {
 .doc-html td,
 .doc-markdown td {
   padding: 9px 14px;
-  color: #bfcfe6;
-  border-bottom: 1px solid #2a3a56;
-  border-right: 1px solid #243249;
+  color: #9fb3c8;
+  border-bottom: 1px solid rgba(10, 74, 148, 0.3);
+  border-right: 1px solid rgba(10, 74, 148, 0.2);
   vertical-align: top;
 }
 
@@ -242,13 +242,13 @@ body {
 .document-paper tr:nth-child(even) td,
 .doc-html tr:nth-child(even) td,
 .doc-markdown tr:nth-child(even) td {
-  background: #1e2d48;
+  background: rgba(4, 26, 56, 0.5);
 }
 
 .document-paper tr:hover td,
 .doc-html tr:hover td,
 .doc-markdown tr:hover td {
-  background: #243556;
+  background: rgba(10, 74, 148, 0.15);
   transition: background 0.1s;
 }
 
@@ -262,7 +262,7 @@ body {
   margin: 1.5em auto;
   border-radius: 4px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.12);
-  border: 1px solid #2d3f5e;
+  border: 1px solid rgba(10, 74, 148, 0.4);
 }
 
 .document-paper figure,
@@ -285,7 +285,7 @@ body {
 .doc-markdown ul {
   margin: 0.5em 0 1em 1.5em;
   padding: 0;
-  color: #c2d0e6;
+  color: #9fb3c8;
 }
 
 .document-paper ol,
@@ -293,7 +293,7 @@ body {
 .doc-markdown ol {
   margin: 0.5em 0 1em 1.5em;
   padding: 0;
-  color: #c2d0e6;
+  color: #9fb3c8;
 }
 
 .document-paper li,
@@ -332,23 +332,23 @@ body {
 }
 
 .inline-code {
-  background: #152035;
-  color: #7dd3fc;
+  background: rgba(4, 26, 56, 0.7);
+  color: #4d9fff;
   padding: 1px 6px;
   border-radius: 3px;
   font-size: 0.87em;
-  border: 1px solid #2d3f5e;
+  border: 1px solid rgba(10, 74, 148, 0.4);
 }
 
 /* ── Blockquotes ── */
 .document-paper blockquote,
 .doc-html blockquote,
 .doc-markdown blockquote {
-  border-left: 4px solid #3b6fca;
+  border-left: 3px solid #1a7fe6;
   margin: 1.2em 0;
   padding: 0.8em 1.2em;
-  background: #162035;
-  color: #9aadcb;
+  background: rgba(4, 26, 56, 0.6);
+  color: #9fb3c8;
   border-radius: 0 4px 4px 0;
   font-style: italic;
 }
@@ -358,7 +358,7 @@ body {
 .doc-html hr,
 .doc-markdown hr {
   border: none;
-  border-top: 1px solid #2d3f5e;
+  border-top: 1px solid rgba(10, 74, 148, 0.3);
   margin: 2em 0;
 }
 

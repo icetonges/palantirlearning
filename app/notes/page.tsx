@@ -313,7 +313,7 @@ function NotesContent() {
                   <div className="bg-night-900 px-4 py-2 border-b border-night-700 text-night-500 text-xs font-mono">
                     Preview — as it will appear on the knowledge page
                   </div>
-                  <div className="bg-night-950 p-4 sm:p-8 min-h-64">
+                  <div className="p-2 min-h-64">
                     {content.trim()
                       ? <DocumentRenderer content={content} />
                       : <p className="text-slate-400 text-sm italic text-center py-16">Start writing to see a preview…</p>
