@@ -77,19 +77,19 @@ body {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .document-paper {
-  background: #ffffff;
-  color: #1a1a2e;
-  border-radius: 4px;
+  background: #1a2035;
+  color: #c9d4e8;
+  border-radius: 8px;
   box-shadow:
-    0 1px 3px rgba(0,0,0,0.12),
-    0 4px 24px rgba(0,0,0,0.18),
-    0 0 0 1px rgba(0,0,0,0.06);
+    0 1px 3px rgba(0,0,0,0.4),
+    0 8px 32px rgba(0,0,0,0.5),
+    0 0 0 1px rgba(255,255,255,0.05);
   padding: 56px 64px;
   max-width: 860px;
   margin: 0 auto;
   font-family: 'Georgia', 'Times New Roman', serif;
   font-size: 15px;
-  line-height: 1.8;
+  line-height: 1.85;
 }
 
 @media (max-width: 768px) {
@@ -102,10 +102,10 @@ body {
 .doc-markdown h1 {
   font-size: 1.9em;
   font-weight: 700;
-  color: #0f172a;
+  color: #e2eaf8;
   margin: 0 0 0.5em;
   padding-bottom: 0.3em;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid #2d3f5e;
   line-height: 1.25;
   font-family: 'Georgia', serif;
   letter-spacing: -0.02em;
@@ -116,10 +116,10 @@ body {
 .doc-markdown h2 {
   font-size: 1.4em;
   font-weight: 700;
-  color: #1e3a5f;
+  color: #7eb8f7;
   margin: 1.8em 0 0.5em;
   padding-bottom: 0.2em;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #2d3f5e;
   line-height: 1.3;
   font-family: 'Georgia', serif;
 }
@@ -129,7 +129,7 @@ body {
 .doc-markdown h3 {
   font-size: 1.15em;
   font-weight: 700;
-  color: #1e3a5f;
+  color: #93c5fd;
   margin: 1.4em 0 0.4em;
   font-family: 'Georgia', serif;
 }
@@ -139,7 +139,7 @@ body {
 .doc-markdown h4 {
   font-size: 1em;
   font-weight: 700;
-  color: #334155;
+  color: #a5b4cc;
   margin: 1.2em 0 0.3em;
   font-family: 'Georgia', serif;
 }
@@ -149,43 +149,43 @@ body {
 .doc-markdown h5, .doc-markdown h6 {
   font-size: 0.95em;
   font-weight: 700;
-  color: #475569;
+  color: #8899b4;
   margin: 1em 0 0.3em;
 }
 
 .document-paper p,
 .doc-html p,
 .doc-markdown p {
-  color: #1e293b;
+  color: #c9d4e8;
   margin: 0 0 1em;
-  line-height: 1.8;
+  line-height: 1.85;
 }
 
 .document-paper a,
 .doc-html a,
 .doc-markdown a {
-  color: #1d4ed8;
+  color: #60a5fa;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 .document-paper a:hover,
 .doc-html a:hover,
 .doc-markdown a:hover {
-  color: #1e40af;
+  color: #93c5fd;
 }
 
 .document-paper strong, .document-paper b,
 .doc-html strong, .doc-html b,
 .doc-markdown strong {
   font-weight: 700;
-  color: #0f172a;
+  color: #e2eaf8;
 }
 
 .document-paper em, .document-paper i,
 .doc-html em, .doc-html i,
 .doc-markdown em {
   font-style: italic;
-  color: #334155;
+  color: #a0b4cc;
 }
 
 /* ── Tables ── */
@@ -212,8 +212,8 @@ body {
 .document-paper th,
 .doc-html th,
 .doc-markdown th {
-  background: #1e3a5f;
-  color: #ffffff;
+  background: #1e3d6b;
+  color: #d4e6ff;
   font-weight: 600;
   text-align: left;
   padding: 10px 14px;
@@ -227,9 +227,9 @@ body {
 .doc-html td,
 .doc-markdown td {
   padding: 9px 14px;
-  color: #1e293b;
-  border-bottom: 1px solid #e2e8f0;
-  border-right: 1px solid #f1f5f9;
+  color: #bfcfe6;
+  border-bottom: 1px solid #2a3a56;
+  border-right: 1px solid #243249;
   vertical-align: top;
 }
 
@@ -242,13 +242,13 @@ body {
 .document-paper tr:nth-child(even) td,
 .doc-html tr:nth-child(even) td,
 .doc-markdown tr:nth-child(even) td {
-  background: #f8fafc;
+  background: #1e2d48;
 }
 
 .document-paper tr:hover td,
 .doc-html tr:hover td,
 .doc-markdown tr:hover td {
-  background: #eff6ff;
+  background: #243556;
   transition: background 0.1s;
 }
 
@@ -262,7 +262,7 @@ body {
   margin: 1.5em auto;
   border-radius: 4px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.12);
-  border: 1px solid #e2e8f0;
+  border: 1px solid #2d3f5e;
 }
 
 .document-paper figure,
@@ -274,7 +274,7 @@ body {
 .document-paper figcaption,
 .doc-markdown figcaption {
   font-size: 0.8em;
-  color: #64748b;
+  color: #7a8fa8;
   margin-top: 0.5em;
   font-style: italic;
 }
@@ -285,7 +285,7 @@ body {
 .doc-markdown ul {
   margin: 0.5em 0 1em 1.5em;
   padding: 0;
-  color: #1e293b;
+  color: #c2d0e6;
 }
 
 .document-paper ol,
@@ -293,7 +293,7 @@ body {
 .doc-markdown ol {
   margin: 0.5em 0 1em 1.5em;
   padding: 0;
-  color: #1e293b;
+  color: #c2d0e6;
 }
 
 .document-paper li,
@@ -332,23 +332,23 @@ body {
 }
 
 .inline-code {
-  background: #f1f5f9;
-  color: #1d4ed8;
+  background: #152035;
+  color: #7dd3fc;
   padding: 1px 6px;
   border-radius: 3px;
   font-size: 0.87em;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #2d3f5e;
 }
 
 /* ── Blockquotes ── */
 .document-paper blockquote,
 .doc-html blockquote,
 .doc-markdown blockquote {
-  border-left: 4px solid #1e3a5f;
+  border-left: 4px solid #3b6fca;
   margin: 1.2em 0;
   padding: 0.8em 1.2em;
-  background: #f0f7ff;
-  color: #334155;
+  background: #162035;
+  color: #9aadcb;
   border-radius: 0 4px 4px 0;
   font-style: italic;
 }
@@ -358,7 +358,7 @@ body {
 .doc-html hr,
 .doc-markdown hr {
   border: none;
-  border-top: 2px solid #e2e8f0;
+  border-top: 1px solid #2d3f5e;
   margin: 2em 0;
 }
 

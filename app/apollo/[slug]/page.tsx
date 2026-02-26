@@ -48,7 +48,7 @@ export default async function ApolloSubPage({ params }: Props) {
           <p className="text-night-200 text-sm leading-relaxed">{page.aiSummary}</p>
         </div>
       )}
-      <div className="bg-slate-100 rounded-2xl p-4 sm:p-8 -mx-2 sm:mx-0">
+      <div className="bg-night-950 rounded-2xl p-4 sm:p-8 -mx-2 sm:mx-0">
         <DocumentRenderer content={page.content} />
       </div>
       <div className="flex flex-wrap gap-3 mt-8 pt-6 border-t border-night-800">

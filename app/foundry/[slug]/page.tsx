@@ -117,7 +117,7 @@ export default async function FoundrySubPage({ params }: Props) {
           )}
 
           {/* Main content */}
-          <div className="bg-slate-100 rounded-2xl p-4 sm:p-8 -mx-2 sm:mx-0">
+          <div className="bg-night-950 rounded-2xl p-4 sm:p-8 -mx-2 sm:mx-0">
         <DocumentRenderer content={page.content} />
       </div>
 
