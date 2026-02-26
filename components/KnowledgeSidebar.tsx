@@ -90,7 +90,7 @@ export default function KnowledgeSidebar({ pages, basePath, category, color }: P
           <div
             ref={listRef}
             className="sidebar-scroll flex-1 overflow-y-auto pr-1 min-h-0"
-            style={{ scrollbarWidth: 'auto', scrollbarColor: '#486581 #102a43' }}
+            style={{ scrollbarWidth: 'auto', scrollbarColor: '#627d98 #0d1f30' }}
           >
             {years.length === 0 ? (
               <p className="text-night-500 text-xs px-2 mt-6 text-center leading-relaxed">
