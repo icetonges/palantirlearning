@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { generateDatedSlug, markdownToPlainText, truncate } from '@/lib/utils'
 import { processDocument, generateFlashcards } from '@/lib/gemini'
-import { htmlToMarkdown } from '@/lib/htmlToMarkdown'
 
 export async function POST(req: NextRequest) {
   const formData    = await req.formData()
