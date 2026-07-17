@@ -1,10 +1,18 @@
 'use client'
 // app/login/page.tsx
 import { signIn } from 'next-auth/react'
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  )
+}
+
+function LoginForm() {
   const [passphrase, setPassphrase] = useState('')
   const [loading,    setLoading]    = useState(false)
   const [error,      setError]      = useState('')
