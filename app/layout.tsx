@@ -4,8 +4,6 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { SessionProvider } from 'next-auth/react'
-import { auth } from '@/lib/auth'
 import { Analytics } from '@vercel/analytics/next'
 
 const inter = Inter({
@@ -36,20 +34,16 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth()
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="bg-night-950 min-h-screen flex flex-col">
-        <SessionProvider session={session}>
-          <Navbar />
-          <main className="flex-1">
-            {children}
-          </main>
-          <Footer />
-        </SessionProvider>
-      <Analytics />
+        <Navbar />
+        <main className="flex-1">
+          {children}
+        </main>
+        <Footer />
+        <Analytics />
       </body>
     </html>
   )

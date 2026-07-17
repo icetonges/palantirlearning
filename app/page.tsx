@@ -7,7 +7,7 @@ import NewsCard from '@/components/NewsCard'
 import AIChat from '@/components/AIChat'
 import { DailyLearningBlock } from '@/components/DailyLearning'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 async function getDashboardData() {
   const [recentPages, recentNews, dailySummary, flashcardCount, quizCount] = await Promise.all([

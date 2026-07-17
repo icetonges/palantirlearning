@@ -1,20 +1,23 @@
 // app/foundry/[slug]/page.tsx — Dynamic Foundry knowledge page
 import { prisma } from '@/lib/db'
+import { getKnowledgePageBySlug } from '@/lib/queries'
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import Link from 'next/link'
 import DocumentRenderer from '@/components/DocumentRenderer'
+import ViewTracker from '@/components/ViewTracker'
 import { formatDate } from '@/lib/utils'
 
 interface Props { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const page = await prisma.knowledgePage.findUnique({ where: { slug }, select: { title: true, excerpt: true } })
+  const page = await getKnowledgePageBySlug(slug)
   if (!page) return { title: 'Not Found' }
   return { title: page.title, description: page.excerpt || undefined }
 }
 
+export const revalidate = 3600
 export const dynamicParams = true
 
 export async function generateStaticParams() {
@@ -34,10 +37,7 @@ export default async function FoundrySubPage({ params }: Props) {
   const { slug } = await params
 
   const [page, relatedPages] = await Promise.all([
-    prisma.knowledgePage.findUnique({
-      where: { slug },
-      include: { flashcards: { select: { id: true } } },
-    }),
+    getKnowledgePageBySlug(slug),
     prisma.knowledgePage.findMany({
       where:   { category: 'FOUNDRY', NOT: { slug } },
       orderBy: { createdAt: 'desc' },
@@ -47,12 +47,6 @@ export default async function FoundrySubPage({ params }: Props) {
   ])
 
   if (!page || page.category !== 'FOUNDRY') notFound()
-
-  // Increment view count
-  await prisma.knowledgePage.update({
-    where: { id: page.id },
-    data:  { viewCount: { increment: 1 } },
-  })
 
   const SOURCE_LABELS: Record<string, string> = {
     NOTE:    'Note',
@@ -120,6 +114,7 @@ export default async function FoundrySubPage({ params }: Props) {
           <div className="bg-night-950 rounded-2xl p-4 sm:p-8 -mx-2 sm:mx-0">
         <DocumentRenderer content={page.content} />
       </div>
+          <ViewTracker slug={page.slug} />
 
           {/* Actions */}
           <div className="flex flex-wrap gap-3 mt-8 pt-6 border-t border-night-800">

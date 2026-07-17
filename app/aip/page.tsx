@@ -6,7 +6,7 @@ import { formatDate } from '@/lib/utils'
 import { SUBCATEGORIES } from '@/lib/navigation'
 import KnowledgeSidebar from '@/components/KnowledgeSidebar'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'AIP — AI Platform',

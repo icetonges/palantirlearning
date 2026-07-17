@@ -1,30 +1,32 @@
 // app/archive/[slug]/page.tsx — General / fallback knowledge page
-import { prisma } from '@/lib/db'
+import { getKnowledgePageBySlug } from '@/lib/queries'
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import Link from 'next/link'
 import DocumentRenderer from '@/components/DocumentRenderer'
+import ViewTracker from '@/components/ViewTracker'
 import { formatDate } from '@/lib/utils'
 
-export const dynamic = 'force-dynamic'
+// No generateStaticParams here on purpose — this is a fallback route that
+// overlaps with /foundry, /ontology, /aip, /apollo (which already prebuild
+// their own slugs). Pages get statically cached on first visit instead via
+// dynamicParams + revalidate, so we don't duplicate build-time generation.
+export const revalidate = 3600
+export const dynamicParams = true
 
 interface Props { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const page = await prisma.knowledgePage.findUnique({ where: { slug }, select: { title: true, excerpt: true } })
+  const page = await getKnowledgePageBySlug(slug)
   if (!page) return { title: 'Not Found' }
   return { title: page.title, description: page.excerpt || undefined }
 }
 
 export default async function ArchiveSubPage({ params }: Props) {
   const { slug } = await params
-  const page = await prisma.knowledgePage.findUnique({
-    where: { slug },
-    include: { flashcards: { select: { id: true } } },
-  })
+  const page = await getKnowledgePageBySlug(slug)
   if (!page) notFound()
-  await prisma.knowledgePage.update({ where: { id: page.id }, data: { viewCount: { increment: 1 } } })
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -59,6 +61,7 @@ export default async function ArchiveSubPage({ params }: Props) {
       )}
 
       <DocumentRenderer content={page.content} />
+      <ViewTracker slug={page.slug} />
 
       <div className="flex flex-wrap gap-3 mt-8 pt-6 border-t border-night-800">
         <Link href={`/study?generateFrom=${page.id}`} className="flex items-center gap-2 px-4 py-2 bg-rose-900/20 hover:bg-rose-800/30 border border-rose-700/40 text-rose-300 rounded-lg text-sm transition-all">

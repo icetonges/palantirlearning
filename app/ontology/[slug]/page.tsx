@@ -1,27 +1,41 @@
 // app/ontology/[slug]/page.tsx
 import { prisma } from '@/lib/db'
+import { getKnowledgePageBySlug } from '@/lib/queries'
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import Link from 'next/link'
 import DocumentRenderer from '@/components/DocumentRenderer'
+import ViewTracker from '@/components/ViewTracker'
 import { formatDate } from '@/lib/utils'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
+export const dynamicParams = true
+
+export async function generateStaticParams() {
+  try {
+    const pages = await prisma.knowledgePage.findMany({
+      where:  { category: 'ONTOLOGY' },
+      select: { slug: true },
+    })
+    return pages.map((p) => ({ slug: p.slug }))
+  } catch {
+    return []
+  }
+}
 
 interface Props { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const page = await prisma.knowledgePage.findUnique({ where: { slug }, select: { title: true, excerpt: true } })
+  const page = await getKnowledgePageBySlug(slug)
   if (!page) return { title: 'Not Found' }
   return { title: page.title, description: page.excerpt || undefined }
 }
 
 export default async function OntologySubPage({ params }: Props) {
   const { slug } = await params
-  const page = await prisma.knowledgePage.findUnique({ where: { slug }, include: { flashcards: { select: { id: true } } } })
+  const page = await getKnowledgePageBySlug(slug)
   if (!page || page.category !== 'ONTOLOGY') notFound()
-  await prisma.knowledgePage.update({ where: { id: page.id }, data: { viewCount: { increment: 1 } } })
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <nav className="flex items-center gap-2 text-sm text-night-500 mb-6">
@@ -51,6 +65,7 @@ export default async function OntologySubPage({ params }: Props) {
       <div className="bg-night-950 rounded-2xl p-4 sm:p-8 -mx-2 sm:mx-0">
         <DocumentRenderer content={page.content} />
       </div>
+      <ViewTracker slug={page.slug} />
       <div className="flex flex-wrap gap-3 mt-8 pt-6 border-t border-night-800">
         <Link href={`/study?generateFrom=${page.id}`} className="flex items-center gap-2 px-4 py-2 bg-rose-900/20 hover:bg-rose-800/30 border border-rose-700/40 text-rose-300 rounded-lg text-sm transition-all">◇ Generate Flashcards ({page.flashcards.length})</Link>
                 <Link

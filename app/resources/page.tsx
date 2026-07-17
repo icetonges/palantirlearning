@@ -2,7 +2,9 @@
 import { prisma } from '@/lib/db'
 import { Metadata } from 'next'
 
-export const dynamic = 'force-dynamic'
+// Note: this route reads `searchParams`, which makes Next.js render it
+// dynamically regardless — removing force-dynamic here just drops the
+// redundant flag, it doesn't change caching behavior for this route.
 
 export const metadata: Metadata = {
   title: 'Resources',
