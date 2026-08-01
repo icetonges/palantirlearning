@@ -446,7 +446,7 @@ export default function ArchivePage() {
                   #{tag}
                 </button>
               ))}
-              <span className="text-night-700 text-xs ml-auto shrink-0">{fmtDate(page.createdAt)}</span>
+              <span className="text-night-500 text-xs ml-auto shrink-0">{fmtDate(page.createdAt)}</span>
             </div>
           </div>
 
@@ -582,7 +582,7 @@ export default function ArchivePage() {
                           filterSub === sub ? 'bg-night-800 text-palantir-300 border border-night-700' : 'text-night-500 hover:text-night-200 hover:bg-night-800/30'
                         }`}>
                         <span className="truncate text-left">{sub}</span>
-                        {count > 0 && <span className="text-night-700 font-mono text-[9px] ml-1 shrink-0">{count}</span>}
+                        {count > 0 && <span className="text-night-500 font-mono text-[9px] ml-1 shrink-0">{count}</span>}
                       </button>
                     ))}
                 </div>
@@ -617,7 +617,7 @@ export default function ArchivePage() {
                   return count > 0 ? (
                     <div key={type} className="flex justify-between px-3">
                       <span className="font-mono">{type}</span>
-                      <span className="text-night-700">{count}</span>
+                      <span className="text-night-500">{count}</span>
                     </div>
                   ) : null
                 })}
@@ -699,7 +699,7 @@ export default function ArchivePage() {
 
             {/* Results count footer */}
             {!loading && displayPages.length > 0 && (
-              <div className="text-center mt-8 text-night-700 text-xs font-mono">
+              <div className="text-center mt-8 text-night-500 text-xs font-mono">
                 {displayPages.length} {displayPages.length === 1 ? 'page' : 'pages'}
                 {hasFilters ? ' matching filters' : ' total'}
               </div>

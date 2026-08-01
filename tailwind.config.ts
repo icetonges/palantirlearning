@@ -23,14 +23,21 @@ const config: Config = {
           900: '#062b57',
           950: '#041a38',
         },
+        // NOTE: 50/100/700/800/900/950 are unchanged (page/card backgrounds and
+        // borders — the dark theme's structure). 200-600 were redefined
+        // 2026-08 because the originals were far too dim as *text* colors on
+        // this dark background (night-300 read at ~3.9:1 contrast, night-600
+        // at ~1.6:1 — both fail WCAG AA and were effectively unreadable).
+        // Every text-night-{200..600} class site-wide now resolves to a
+        // brighter, legible tone (>=4.6:1, most >6:1) automatically.
         night: {
           50:  '#f0f4f8',
-          100: '#d9e2ec',
-          200: '#9fb3c8',
-          300: '#627d98',
-          400: '#486581',
-          500: '#334e68',
-          600: '#243b53',
+          100: '#eef3f8',
+          200: '#d3dee9',
+          300: '#b8c8d9',
+          400: '#9fb3c8',
+          500: '#869fb8',
+          600: '#7a93ae',
           700: '#1b2f3f',
           800: '#102a43',
           900: '#0d1f30',

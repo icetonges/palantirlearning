@@ -325,7 +325,7 @@ export default function LearnPage() {
             Join Community ↗
           </a>
         </div>
-        <p className="text-night-700 text-xs mt-4">
+        <p className="text-night-500 text-xs mt-4">
           Not affiliated with Palantir Technologies Inc. ·{' '}
           <Link href="/resources" className="hover:text-night-500">See all resources →</Link>
         </p>

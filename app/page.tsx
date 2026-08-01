@@ -208,7 +208,7 @@ export default async function HomePage() {
                     </span>
                     {page.subCategory && (
                       <>
-                        <span className="text-night-700">·</span>
+                        <span className="text-night-500">·</span>
                         <span className="text-xs text-night-500">{page.subCategory}</span>
                       </>
                     )}
