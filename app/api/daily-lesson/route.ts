@@ -10,14 +10,28 @@ function todayUTC(): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
 }
 
-function dateSeed(date: Date): number {
-  const str = date.toISOString().slice(0, 10).replace(/-/g, '')
-  return parseInt(str, 10) % 997
+// How many past days of history to show the model so it avoids repeating itself.
+const HISTORY_LOOKBACK = 45
+
+async function recentHistory() {
+  try {
+    const past = await prisma.dailyLesson.findMany({
+      orderBy: { lessonDate: 'desc' },
+      take: HISTORY_LOOKBACK,
+      select: { topicTitle: true, palantir101: true },
+    })
+    return {
+      topicHistory: past.map(p => p.topicTitle),
+      p101History:  past.map(p => p.palantir101.split('\n').find(l => l.trim())?.slice(0, 160) ?? '').filter(Boolean),
+    }
+  } catch (e) {
+    console.warn('[daily-lesson] history read failed:', String(e))
+    return { topicHistory: [] as string[], p101History: [] as string[] }
+  }
 }
 
 export async function GET() {
   const today = todayUTC()
-  const seed  = dateSeed(today)
 
   // 1. Return from DB cache if available
   try {
@@ -36,14 +50,16 @@ export async function GET() {
     console.warn('[daily-lesson] DB read failed:', String(e))
   }
 
-  // 2. Generate both in parallel
+  // 2. Generate both in parallel, giving each generator recent history so it
+  //    picks something new instead of repeating a past day's topic/angle.
   let topicResult: Awaited<ReturnType<typeof generateDailyTopic>>
   let p101Result: string
 
   try {
+    const { topicHistory, p101History } = await recentHistory()
     const results = await Promise.all([
-      generateDailyTopic(seed),
-      generatePalantir101(seed),
+      generateDailyTopic(topicHistory),
+      generatePalantir101(p101History),
     ])
     topicResult = results[0]
     p101Result  = results[1]

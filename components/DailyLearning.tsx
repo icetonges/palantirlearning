@@ -21,15 +21,15 @@ const DC: Record<string, { badge: string; bar: string; border: string; text: str
 function Skeleton() {
   return (
     <div className="animate-pulse space-y-3 py-2">
-      <div className="h-3.5 bg-night-800 rounded w-2/5" />
-      <div className="h-3 bg-night-800 rounded w-full" />
-      <div className="h-3 bg-night-800 rounded w-5/6" />
-      <div className="h-3 bg-night-800 rounded w-full" />
-      <div className="h-3 bg-night-800 rounded w-4/5" />
-      <div className="h-3.5 bg-night-800 rounded w-1/3 mt-4" />
-      <div className="h-3 bg-night-800 rounded w-full" />
-      <div className="h-3 bg-night-800 rounded w-full" />
-      <div className="h-3 bg-night-800 rounded w-3/4" />
+      <div className="h-3.5 bg-night-700 rounded w-2/5" />
+      <div className="h-3 bg-night-700 rounded w-full" />
+      <div className="h-3 bg-night-700 rounded w-5/6" />
+      <div className="h-3 bg-night-700 rounded w-full" />
+      <div className="h-3 bg-night-700 rounded w-4/5" />
+      <div className="h-3.5 bg-night-700 rounded w-1/3 mt-4" />
+      <div className="h-3 bg-night-700 rounded w-full" />
+      <div className="h-3 bg-night-700 rounded w-full" />
+      <div className="h-3 bg-night-700 rounded w-3/4" />
     </div>
   )
 }
@@ -41,19 +41,19 @@ function Prose({ text, headingClass }: { text: string; headingClass: string }) {
   for (const line of text.split('\n')) {
     if (line.startsWith('## ')) {
       nodes.push(
-        <h3 key={k++} className={`flex items-center gap-2 text-sm font-semibold mt-5 mb-2 ${headingClass}`}>
-          <span className="w-1 h-3.5 rounded-full bg-current opacity-50 shrink-0 inline-block" />
+        <h3 key={k++} className={`flex items-center gap-2 text-base font-semibold mt-5 mb-2 ${headingClass}`}>
+          <span className="w-1 h-3.5 rounded-full bg-current opacity-70 shrink-0 inline-block" />
           {line.slice(3)}
         </h3>
       )
     } else if (line.startsWith('# ')) {
-      nodes.push(<h2 key={k++} className="text-white font-bold text-base mt-4 mb-2">{line.slice(2)}</h2>)
+      nodes.push(<h2 key={k++} className="text-white font-bold text-lg mt-4 mb-2">{line.slice(2)}</h2>)
     } else if (line.startsWith('- ') || line.startsWith('* ')) {
       nodes.push(
-        <li key={k++} className="text-night-300 text-sm leading-relaxed ml-4 mb-1 list-disc">{fmt(line.slice(2))}</li>
+        <li key={k++} className="text-night-100 text-[15px] leading-relaxed ml-4 mb-1.5 list-disc">{fmt(line.slice(2))}</li>
       )
     } else if (line.trim()) {
-      nodes.push(<p key={k++} className="text-night-300 text-sm leading-relaxed mb-2">{fmt(line)}</p>)
+      nodes.push(<p key={k++} className="text-night-100 text-[15px] leading-relaxed mb-3">{fmt(line)}</p>)
     }
   }
   return <>{nodes}</>
@@ -65,10 +65,10 @@ function fmt(text: string): React.ReactNode {
     if (p.startsWith('**') && p.endsWith('**'))
       return <strong key={i} className="text-white font-semibold">{p.slice(2, -2)}</strong>
     if (p.startsWith('`') && p.endsWith('`'))
-      return <code key={i} className="text-cyan-300 bg-night-800 px-1 py-0.5 rounded text-xs font-mono">{p.slice(1, -1)}</code>
+      return <code key={i} className="text-cyan-200 bg-night-800 px-1 py-0.5 rounded text-[13px] font-mono">{p.slice(1, -1)}</code>
     const link = p.match(/^\[([^\]]+)\]\(([^)]+)\)$/)
     if (link)
-      return <a key={i} href={link[2]} target="_blank" rel="noopener noreferrer" className="text-palantir-400 hover:text-palantir-300 underline underline-offset-2">{link[1]}</a>
+      return <a key={i} href={link[2]} target="_blank" rel="noopener noreferrer" className="text-palantir-300 hover:text-palantir-200 underline underline-offset-2">{link[1]}</a>
     return p
   })
 }
@@ -84,9 +84,9 @@ export function Palantir101Section({ lesson, loading }: { lesson: DailyLesson | 
         </div>
         <div>
           <h2 className="text-lg font-bold text-white leading-none">Palantir 101</h2>
-          <p className="text-night-600 text-[10px] mt-0.5">{today} · Tech stack + learning strategy</p>
+          <p className="text-night-200 text-xs mt-1">{today} · Tech stack + learning strategy</p>
         </div>
-        <span className="ml-auto text-[10px] px-2 py-0.5 rounded border font-mono text-palantir-400 bg-palantir-900/20 border-palantir-700/40">Daily</span>
+        <span className="ml-auto text-xs px-2 py-0.5 rounded border font-mono text-palantir-300 bg-palantir-900/20 border-palantir-700/40">Daily</span>
       </div>
 
       <div className="bg-night-900 border border-palantir-900/40 rounded-2xl overflow-hidden">
@@ -96,7 +96,7 @@ export function Palantir101Section({ lesson, loading }: { lesson: DailyLesson | 
             ? <Skeleton />
             : lesson
               ? <Prose text={lesson.palantir101} headingClass="text-palantir-300" />
-              : <p className="text-night-500 text-sm text-center py-6">Generating Palantir 101…</p>
+              : <p className="text-night-200 text-[15px] text-center py-6">Generating Palantir 101…</p>
           }
         </div>
       </div>
@@ -117,12 +117,12 @@ export function DailyTopicSection({ lesson, loading }: { lesson: DailyLesson | n
         </div>
         <div>
           <h2 className="text-lg font-bold text-white leading-none">Daily Learning Topic</h2>
-          <p className="text-night-600 text-[10px] mt-0.5">{today} · Refreshes at midnight UTC</p>
+          <p className="text-night-200 text-xs mt-1">{today} · Refreshes at midnight UTC</p>
         </div>
         {lesson && !loading && (
           <div className="ml-auto flex items-center gap-1.5">
-            <span className={`text-[10px] px-2 py-0.5 rounded border font-mono ${dc.badge}`}>{lesson.topicDomain}</span>
-            <span className="text-[10px] px-2 py-0.5 rounded border font-mono text-night-400 bg-night-800 border-night-700">{lesson.topicSubject}</span>
+            <span className={`text-xs px-2 py-0.5 rounded border font-mono ${dc.badge}`}>{lesson.topicDomain}</span>
+            <span className="text-xs px-2 py-0.5 rounded border font-mono text-night-100 bg-night-800 border-night-700">{lesson.topicSubject}</span>
           </div>
         )}
       </div>
@@ -137,14 +137,14 @@ export function DailyTopicSection({ lesson, loading }: { lesson: DailyLesson | n
               <div className="flex items-center gap-2 mb-4 pb-4 border-b border-night-800">
                 <span className={`text-xl ${dc.text}`}>{dc.icon}</span>
                 <div>
-                  <p className="text-night-600 text-[10px] font-mono">{lesson.topicDomain} › {lesson.topicSubject}</p>
+                  <p className="text-night-200 text-xs font-mono">{lesson.topicDomain} › {lesson.topicSubject}</p>
                   <h3 className="text-white font-bold text-base leading-tight">{lesson.topicTitle}</h3>
                 </div>
               </div>
               <Prose text={lesson.topicBody} headingClass={dc.text} />
             </>
           ) : (
-            <p className="text-night-500 text-sm text-center py-6">Generating today&apos;s topic…</p>
+            <p className="text-night-200 text-[15px] text-center py-6">Generating today&apos;s topic…</p>
           )}
         </div>
       </div>
@@ -176,8 +176,8 @@ export function DailyLearningBlock() {
 
   if (error) return (
     <div className="p-4 bg-night-900 border border-amber-900/40 rounded-xl text-center space-y-1">
-      <p className="text-amber-400 text-sm font-medium">⚠ Daily content unavailable</p>
-      <p className="text-night-500 text-xs font-mono break-all">{errDetail || 'Unknown error'}</p>
+      <p className="text-amber-300 text-sm font-medium">⚠ Daily content unavailable</p>
+      <p className="text-night-200 text-xs font-mono break-all">{errDetail || 'Unknown error'}</p>
     </div>
   )
 

@@ -18,13 +18,26 @@ export async function POST(req: NextRequest) {
   // Delete existing cache
   await prisma.dailyLesson.deleteMany({ where: { lessonDate: today } }).catch(() => {})
 
-  // Pick a new seed: use current timestamp seconds so each refresh gets a different topic
-  const seed = Math.floor(Date.now() / 1000) % 997
+  // Give the generators recent history (including today's now-deleted entry
+  // won't be in it) so a manual refresh still avoids repeating a past topic.
+  let topicHistory: string[] = []
+  let p101History: string[] = []
+  try {
+    const past = await prisma.dailyLesson.findMany({
+      orderBy: { lessonDate: 'desc' },
+      take: 45,
+      select: { topicTitle: true, palantir101: true },
+    })
+    topicHistory = past.map(p => p.topicTitle)
+    p101History  = past.map(p => p.palantir101.split('\n').find(l => l.trim())?.slice(0, 160) ?? '').filter(Boolean)
+  } catch (e) {
+    console.warn('[daily-lesson/refresh] history read failed:', String(e))
+  }
 
   try {
     const results = await Promise.all([
-      generateDailyTopic(seed),
-      generatePalantir101(seed),
+      generateDailyTopic(topicHistory),
+      generatePalantir101(p101History),
     ])
     const topic = results[0]
     const p101  = results[1]

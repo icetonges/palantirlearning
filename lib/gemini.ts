@@ -275,35 +275,33 @@ ${extractedText.slice(0, 5000)}`,
 }
 
 // ─── Daily Learning Topic ─────────────────────────────────────────────────────
-const TOPIC_POOL = [
-  { domain: 'FOUNDRY',  subject: 'Transforms',                 topic: 'Incremental Transforms in PySpark' },
-  { domain: 'FOUNDRY',  subject: 'Data Connection & Ingestion', topic: 'Raw Data Sources and Magritte connectors' },
-  { domain: 'FOUNDRY',  subject: 'Workshop Apps',              topic: 'Building operational apps in Workshop' },
-  { domain: 'FOUNDRY',  subject: 'Contour Analytics',          topic: 'Cohort analysis and aggregations in Contour' },
-  { domain: 'FOUNDRY',  subject: 'Foundry ML',                 topic: 'Model training and deployment in Foundry ML' },
-  { domain: 'FOUNDRY',  subject: 'Security & Markings',        topic: 'Data markings, labels, and access control' },
-  { domain: 'FOUNDRY',  subject: 'Datasets & Branches',        topic: 'Branch-based data lineage and versioning' },
-  { domain: 'FOUNDRY',  subject: 'OSDK in Foundry',            topic: 'Ontology SDK — TypeScript and Python clients' },
-  { domain: 'ONTOLOGY', subject: 'Object Types',               topic: 'Designing Object Types and property schemas' },
-  { domain: 'ONTOLOGY', subject: 'Link Types',                 topic: 'Many-to-many link types and relationship modeling' },
-  { domain: 'ONTOLOGY', subject: 'Actions & Rules',            topic: 'Writing Actions to mutate ontology state' },
-  { domain: 'ONTOLOGY', subject: 'Time Series',                topic: 'Time series properties and temporal queries' },
-  { domain: 'ONTOLOGY', subject: 'Aggregations',               topic: 'Object Set aggregations and rollups' },
-  { domain: 'AIP',      subject: 'AIP Logic',                  topic: 'Building deterministic AIP Logic pipelines' },
-  { domain: 'AIP',      subject: 'AIP Studio',                 topic: 'Designing agents in AIP Agent Studio' },
-  { domain: 'AIP',      subject: 'Prompt Engineering',         topic: 'Prompt patterns for reliable LLM outputs' },
-  { domain: 'AIP',      subject: 'LLM Configuration',          topic: 'Model selection, temperature, and context length' },
-  { domain: 'AIP',      subject: 'Security & Governance',      topic: 'AIP guardrails, audit logs, and data classification' },
-  { domain: 'APOLLO',   subject: 'Software Distribution',      topic: 'Continuous delivery of services via Apollo' },
-  { domain: 'APOLLO',   subject: 'Fleet Management',           topic: 'Multi-environment fleet topology in Apollo' },
-  { domain: 'APOLLO',   subject: 'Air-Gapped Deployments',     topic: 'Offline and classified network deployments' },
-]
+// The model chooses the day's topic itself (not a fixed lookup table), steered
+// away from whatever has run recently so the series keeps expanding across the
+// full Palantir surface area instead of looping a short pre-built list.
+const TOPIC_DOMAINS = 'FOUNDRY, ONTOLOGY, AIP, APOLLO'
+const TOPIC_SURFACE = `FOUNDRY (Pipeline Builder, Code Repositories, Code Workspaces, Contour, Workshop, Slate, Object Explorer, Automate, Data Lineage, Data Health, Magritte connectors, Foundry ML, branching/versioning, access control & markings), ONTOLOGY (Object Types, Link Types, Actions, Functions, Time Series & Media Sets, Object Set aggregations, the Ontology SDK), AIP (AIP Logic, AIP Agent Studio, AIP Assist, evaluations/guardrails, prompt & context design, model configuration), APOLLO (release orchestration, fleet management, multi-environment/air-gapped deployments, managed upgrades)`
 
-export async function generateDailyTopic(seed: number): Promise<{
+async function pickDailyTopic(history: string[]): Promise<{ domain: string; subject: string; topic: string }> {
+  const prompt = `You curate a daily technical learning series on the Palantir platform, covering: ${TOPIC_SURFACE}.
+
+Topics already covered recently — do NOT repeat these or anything nearly identical:
+${history.length ? history.map(h => `- ${h}`).join('\n') : '(none yet — this is the first entry)'}
+
+Choose ONE new, specific, technically substantive topic not covered above. Vary which of ${TOPIC_DOMAINS} you pick day to day rather than always the same one. Favor concrete features, APIs, or workflows over generic overviews.
+
+Return ONLY valid JSON, no markdown fences:
+{"domain": "FOUNDRY|ONTOLOGY|AIP|APOLLO", "subject": "short subject label, 2-4 words", "topic": "specific topic title, under 8 words"}`
+
+  return geminiJSON<{ domain: string; subject: string; topic: string }>(
+    prompt,
+    'You are an expert Palantir curriculum designer. Return only valid JSON.'
+  )
+}
+
+export async function generateDailyTopic(history: string[] = []): Promise<{
   title: string; domain: string; subject: string; body: string
 }> {
-  const entry = TOPIC_POOL[seed % TOPIC_POOL.length]
-  const { domain, subject, topic } = entry
+  const { domain, subject, topic } = await pickDailyTopic(history)
 
   const prompt = `You are a senior Palantir engineer writing a focused daily learning brief.
 
@@ -334,21 +332,22 @@ Be technical, specific, direct. Real product names and API patterns only.`
 }
 
 // ─── Palantir 101 Daily Rotation ──────────────────────────────────────────────
-const PALANTIR_101_ANGLES = [
-  'the Ontology as the semantic layer that unifies all Palantir products',
-  'how Foundry Transforms create a governed, versioned data pipeline',
-  "AIP and how it wraps LLMs inside Palantir's governance model",
-  'Apollo as the DevOps backbone for multi-cloud and air-gapped deployments',
-  'the OSDK and how it lets external apps consume Ontology objects',
-  'the data flow: Raw to Bronze to Silver to Gold layers in Foundry',
-  'how Workshop and Slate turn Ontology data into operational applications',
-  'the role of markings and data classification across the Palantir stack',
-  'how AIPCon and DevCon demonstrate real-world enterprise deployments',
-  'the learning path: Foundry first, then Ontology, then AIP, then Apollo',
-]
+// Same idea: the model invents today's framing/angle itself, informed by what
+// it's already written recently, instead of cycling a fixed list of angles.
+async function pickPalantir101Angle(history: string[]): Promise<string> {
+  const prompt = `You write a daily "Palantir 101" overview for developers learning the Palantir stack (Foundry, Ontology, AIP, Apollo).
 
-export async function generatePalantir101(seed: number): Promise<string> {
-  const angle = PALANTIR_101_ANGLES[seed % PALANTIR_101_ANGLES.length]
+Opening angles/framings already used recently — do NOT repeat these or anything nearly identical:
+${history.length ? history.map((h, i) => `${i + 1}. ${h}`).join('\n') : '(none yet — this is the first entry)'}
+
+Write ONE new, specific framing (a single sentence, no preamble) for today's overview — a fresh way to explain how the Palantir stack fits together or how to learn it, distinct from everything above. Return only that sentence, no quotes, no markdown.`
+
+  const { text } = await gemini(prompt)
+  return text.trim().replace(/^["']|["']$/g, '')
+}
+
+export async function generatePalantir101(history: string[] = []): Promise<string> {
+  const angle = await pickPalantir101Angle(history)
 
   const prompt = `You are a Palantir expert writing a daily overview for developers learning the stack.
 
