@@ -100,17 +100,36 @@ function NotesContent() {
   // ── Image upload ───────────────────────────────────────────────────────────
   const handleImageUpload = async (imgFile: File) => {
     setImgUploading(true)
+    setError('')
     try {
       const fd = new FormData()
       fd.append('image', imgFile)
       const res  = await fetch('/api/upload/image', { method: 'POST', body: fd })
       const data = await res.json()
-      if (data.url) {
-        insertAtCursor(`![${imgFile.name.replace(/\.[^.]+$/, '')}](${data.url})`)
-      }
-    } catch { setError('Image upload failed') }
-    finally { setImgUploading(false) }
+      if (!res.ok || !data.url) throw new Error(data.error || 'Image upload failed')
+      insertAtCursor(`![${imgFile.name.replace(/\.[^.]+$/, '') || 'image'}](${data.url})`)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Image upload failed')
+    } finally { setImgUploading(false) }
   }
+
+  // Paste an image straight from the clipboard (e.g. copied from a browser,
+  // screenshot tool, or another doc) directly into the note — uploads it the
+  // same way as the 🖼 toolbar button and inserts the markdown reference.
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile()
+        if (file) {
+          e.preventDefault()
+          handleImageUpload(file)
+        }
+        return
+      }
+    }
+  }, [handleImageUpload])
 
   // ── Toolbar buttons ────────────────────────────────────────────────────────
   const toolbar = [
@@ -302,8 +321,9 @@ function NotesContent() {
                     ref={textareaRef}
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
+                    onPaste={handlePaste}
                     rows={26}
-                    placeholder={`# My Note Title\n\n## Overview\n\nWrite your knowledge here. Full Markdown is supported:\n\n## Tables\n\n| Column 1 | Column 2 | Column 3 |\n|---|---|---|\n| Cell | Cell | Cell |\n\n## Code\n\n\`\`\`python\ndef hello():\n    print("Hello Palantir")\n\`\`\`\n\n## Images\n\nUse the 🖼 button in the toolbar to insert images.`}
+                    placeholder={`# My Note Title\n\n## Overview\n\nWrite your knowledge here. Full Markdown is supported:\n\n## Tables\n\n| Column 1 | Column 2 | Column 3 |\n|---|---|---|\n| Cell | Cell | Cell |\n\n## Code\n\n\`\`\`python\ndef hello():\n    print("Hello Palantir")\n\`\`\`\n\n## Images\n\nUse the 🖼 button in the toolbar, or paste an image straight from your clipboard.`}
                     className="w-full px-4 py-3 bg-night-800 border border-night-700 rounded-b-lg text-white placeholder-night-600 text-sm font-mono leading-relaxed focus:outline-none focus:border-palantir-500 resize-y"
                   />
                 </>
