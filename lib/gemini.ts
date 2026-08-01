@@ -4,11 +4,17 @@ import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from '@google/genai'
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 
+// Updated 2026-08 — gemini-2.0-flash was shut down (Google zeroes its free-tier
+// quota rather than erroring outright, which surfaces as a misleading "quota
+// exceeded" 429) and gemini-1.5-flash / gemini-1.5-flash-8b have been fully
+// retired from the v1beta API ("model not found"). Confirmed current/stable
+// models via https://ai.google.dev/gemini-api/docs/models.
 const MODEL_CHAIN = [
-  'gemini-2.5-flash-lite',  // primary — requested
-  'gemini-2.0-flash',
-  'gemini-1.5-flash',
-  'gemini-1.5-flash-8b',
+  'gemini-2.5-flash-lite',  // primary — cheapest/highest free-tier RPD, keep first
+  'gemini-2.5-flash',       // standard flash tier
+  'gemini-3.5-flash-lite',  // Gemini 3 flash-lite fallback
+  'gemini-3.6-flash',       // Gemini 3 flash fallback
+  'gemini-2.5-pro',         // pro-tier reasoning, last resort (tightest free-tier RPM)
 ]
 
 const SAFETY = [

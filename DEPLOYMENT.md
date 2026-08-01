@@ -176,6 +176,6 @@ python scripts/scrape_palantir.py
 
 - **Single nav source**: `lib/navigation.ts` → edit once, updates everywhere
 - **Self-evolving**: Every note/upload creates a new DB record and permanent page
-- **AI fallback chain**: Gemini 2.5 Flash → 2.5 Flash Lite → 1.5 Flash → 1.5 Flash 8B
+- **AI fallback chain**: Gemini 2.5 Flash Lite → 2.5 Flash → 3.5 Flash Lite → 3.6 Flash → 2.5 Pro (→ Groq if all fail)
 - **Dark mode by default**: `:root` = dark, no flash on load
 - **Owner-only auth**: Only `OWNER_EMAIL` can authenticate via Google or passphrase
